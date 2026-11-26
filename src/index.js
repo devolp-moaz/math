@@ -7,7 +7,16 @@ const GRADES = [
   "الثاني الثانوي",
   "الثالث الثانوي"
 ];
-const TRACKS = ["علمي", "أدبي"];
+const SUBJECTS_BY_GRADE = {
+  [GRADES[0]]: ["اللغة العربية", "اللغة الإنجليزية", "الرياضيات", "العلوم", "الدراسات الاجتماعية", "التربية الدينية", "الكمبيوتر وتكنولوجيا المعلومات"],
+  [GRADES[1]]: ["اللغة العربية", "اللغة الإنجليزية", "الرياضيات", "العلوم", "الدراسات الاجتماعية", "التربية الدينية", "الكمبيوتر وتكنولوجيا المعلومات"],
+  [GRADES[2]]: ["اللغة العربية", "اللغة الإنجليزية", "الرياضيات", "العلوم", "الدراسات الاجتماعية", "التربية الدينية", "الكمبيوتر وتكنولوجيا المعلومات"],
+  [GRADES[3]]: ["اللغة العربية", "اللغة الإنجليزية", "اللغة الأجنبية الثانية", "الرياضيات", "العلوم المتكاملة", "التاريخ", "الفلسفة والمنطق", "التربية الدينية", "الكمبيوتر وتكنولوجيا المعلومات"],
+  [GRADES[4]]: ["اللغة العربية", "اللغة الإنجليزية", "اللغة الأجنبية الثانية", "الرياضيات", "الفيزياء", "الكيمياء", "الأحياء", "التاريخ", "الجغرافيا", "الفلسفة والمنطق", "علم النفس", "التربية الدينية"],
+  [GRADES[5]]: ["اللغة العربية", "اللغة الإنجليزية", "اللغة الأجنبية الثانية", "الرياضيات", "الفيزياء", "الكيمياء", "الأحياء", "التاريخ", "الجغرافيا", "الفلسفة", "علم النفس", "الاقتصاد والإحصاء", "التربية الدينية"]
+};
+const ALL_SUBJECTS = Array.from(new Set(Object.values(SUBJECTS_BY_GRADE).flat()));
+const SUBJECT_CODE_SUBJECTS = ALL_SUBJECTS.filter(subject => subject !== "الرياضيات");
 const EGYPT_GOVERNORATES = [
   "القاهرة",
   "الجيزة",
@@ -39,7 +48,7 @@ const EGYPT_GOVERNORATES = [
 const TEACHER_MAIN_PHOTO = "/teacher-ahmed-portrait.jpeg";
 const DEFAULT_ADMIN_EMAIL = "mohmed@mr.com";
 const DEFAULT_ADMIN_PASS = "admin123456";
-const PLATFORM_NAME = "منصة الرياضيات";
+const PLATFORM_NAME = "منصة أحمد الشرقاوي";
 const TEACHER_NAME = "الأستاذ أحمد الشرقاوي";
 const TEACHER_EXPERIENCE_YEARS = "20";
 const COURSE_PRICE_EGP = 500;
@@ -290,6 +299,35 @@ function sortLectures(list) {
   });
 }
 
+function getLectureSubject(lecture) {
+  const subject = String(lecture.subject || "").trim();
+  if (subject) return subject;
+  return BRANCHES.includes(String(lecture.branch || "")) ? "الرياضيات" : String(lecture.branch || "غير محدد");
+}
+
+function studentHasSubjectAccess(student, subject) {
+  const activeSubjects = Array.isArray(student.subjects) ? student.subjects : [];
+  return activeSubjects.some(item => {
+    if (!item) return false;
+    if (typeof item === "string") return item === subject;
+    return String(item.subject || "") === subject && String(item.grade || "") === String(student.grade || "");
+  });
+}
+
+function studentSubjectAccessKey(grade, subject) {
+  return `${String(grade || "")}\u0000${String(subject || "")}`;
+}
+
+function isSupportChatOpen(date = new Date()) {
+  const hourPart = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Africa/Cairo",
+    hour: "2-digit",
+    hourCycle: "h23"
+  }).formatToParts(date).find(part => part.type === "hour");
+  const hour = Number(hourPart?.value);
+  return hour >= 10 && hour < 19;
+}
+
 function checkCenterStudentLectureAccess(student, lecture) {
   const isCenter = Boolean(student && (student.is_center_student || student.center_code));
   if (!isCenter) return { allowed: true, reason: "" };
@@ -443,7 +481,7 @@ function renderPrivacyStandalonePage() {
     {
       enTitle: "Personal Information Privacy",
       arTitle: "خصوصية المعلومات الشخصية",
-      desc: "الاسم الرباعي، رقم هاتف الطالب، رقم هاتف ولي الأمر، الصف، الشعبة، والمحافظة تُحفظ بسرية ولا تُعرض أو تُباع لأي جهة خارجية."
+      desc: "الاسم الرباعي، رقم هاتف الطالب، رقم هاتف ولي الأمر، الصف، والمحافظة تُحفظ بسرية ولا تُعرض أو تُباع لأي جهة خارجية."
     },
     {
       enTitle: "Educational & Assessment Privacy",
@@ -453,7 +491,7 @@ function renderPrivacyStandalonePage() {
     {
       enTitle: "Intellectual Property & Video Content Privacy",
       arTitle: "خصوصية المحتوى التعليمي والملكية الفكرية",
-      desc: "جميع المحاضرات والشروحات والملفات محفوظة لمنصة الرياضيات والأستاذ، ويُمنع تصوير الشاشة أو إعادة نشر المحتوى."
+      desc: `جميع المحاضرات والشروحات والملفات محفوظة لـ${PLATFORM_NAME} والأستاذ، ويُمنع تصوير الشاشة أو إعادة نشر المحتوى.`
     },
     {
       enTitle: "Account & Single-Device Session Security",
@@ -495,6 +533,7 @@ function renderPrivacyStandalonePage() {
 function renderLayout(title, settings, student, isStaff, bodyHtml, options = {}) {
   const showLandingAdminAvatar = Boolean(options.showLandingAdminAvatar);
   const showSupportWidget = options.showSupportWidget !== false;
+  const isLoggedInStudent = Boolean(student);
   const hasNotice = Boolean(settings.global_notice && String(settings.global_notice).trim());
   const defaultChatName = student ? String(student.full_name || "") : "";
   const defaultChatPhone = student ? String(student.phone || "") : "";
@@ -513,7 +552,7 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
   <title>${esc(title)} | ${PLATFORM_NAME}</title>
   <link rel="icon" type="image/png" href="${esc(settings.teacher_image)}" />
   <link rel="shortcut icon" href="${esc(settings.teacher_image)}" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Aref+Ruqaa:wght@700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;600;700;800;900&display=swap" />
   <style>
     :root {
       --bg: #edf7f4;
@@ -737,8 +776,10 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
       color: #fff; font-weight: 900; display: grid; place-items: center; font-size: 0.88rem;
       border: 1px solid rgba(255,255,255,0.34);
       box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.28), inset 0 1px 0 rgba(255,255,255,0.28);
-      letter-spacing: -0.5px;
+      letter-spacing: 0.1px;
+      font-family: 'Tajawal', 'Cairo', sans-serif;
     }
+    .platform-name { font-family: 'Tajawal', 'Cairo', sans-serif; letter-spacing: 0.15px; }
 
     .notif-bell-wrap {
       position: relative;
@@ -1354,37 +1395,6 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
     }
     .plus-attach-btn:hover { background: var(--accent); color: #ffffff; }
 
-    .inline-dua-banner {
-      max-width: 1240px;
-      margin: 14px auto 0;
-      padding: 15px 22px;
-      border-radius: 20px;
-      background: linear-gradient(125deg, var(--accent-dark), var(--accent-2));
-      color: #fff;
-      box-shadow: var(--shadow-md);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 14px;
-      flex-wrap: wrap;
-      transition: max-height 0.4s ease, opacity 0.4s ease, margin 0.4s ease, padding 0.4s ease;
-      max-height: 150px;
-      opacity: 1;
-      overflow: hidden;
-    }
-    .inline-dua-banner.dua-done {
-      max-height: 0; opacity: 0; margin-top: 0; padding-top: 0; padding-bottom: 0; pointer-events: none;
-    }
-    .inline-dua-left { display: flex; align-items: center; gap: 12px; }
-    .inline-dua-avatar {
-      width: 52px; height: 64px; border-radius: 13px;
-      object-fit: contain; object-position: center top;
-      background: rgba(255, 255, 255, 0.16);
-      border: 1.5px solid rgba(255, 255, 255, 0.7); flex-shrink: 0;
-    }
-    .inline-dua-text { font-weight: 900; font-size: 1.05rem; }
-    .inline-dua-sub { font-size: 0.8rem; opacity: 0.92; }
-
     .glow-notice-wrap {
       max-width: 1240px;
       margin: 14px auto 0;
@@ -1798,17 +1808,170 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
     .footer-brand-emblem { font-size: 2rem; font-weight: 900; color: #e7be72; letter-spacing: 0.5px; }
     .footer-copyright-line { font-size: 0.9rem; font-weight: 800; color: #e3efeb; }
     .footer-dev-line { font-size: 0.86rem; font-weight: 800; color: #65bfb1; direction: ltr; }
+    .sharqawy-float-wrap {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 79;
+      width: max-content;
+      max-width: calc(100vw - 32px);
+      perspective: 700px;
+      transform-style: preserve-3d;
+      pointer-events: none;
+      animation: sharqawyDrift 56s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+      transition: opacity 0.3s ease;
+    }
+    .sharqawy-float-wrap.is-dismissed {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      animation: none;
+    }
+    .sharqawy-float-wrap:hover,
+    .sharqawy-float-wrap:focus-within,
+    .sharqawy-float-wrap.is-pointer-near { animation-play-state: paused; }
+    .sharqawy-float-wrap.is-message-open { animation-play-state: paused; }
+    .sharqawy-cta {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 136px;
+      min-height: 52px;
+      box-sizing: border-box;
+      max-width: calc(100vw - 48px);
+      padding: 8px 14px;
+      border: 1px solid rgba(231, 242, 255, 0.9);
+      border-radius: 999px;
+      color: #fff;
+      background: linear-gradient(125deg, #e1bc7f 0%, #d99b47 26%, #176b83 62%, #092c59 100%);
+      box-shadow: 0 5px 0 #073664, 0 0 7px rgba(41, 103, 167, 0.8), 0 11px 22px rgba(7, 48, 91, 0.38), inset 0 2px 6px rgba(255, 255, 255, 0.48);
+      text-decoration: none;
+      cursor: pointer;
+      pointer-events: auto;
+      transform-style: preserve-3d;
+      transition: box-shadow 0.2s ease, filter 0.2s ease, transform 0.2s ease;
+      font: inherit;
+    }
+    .sharqawy-cta::before {
+      content: "";
+      position: absolute;
+      inset: 3px 5px -5px;
+      border: 1px solid rgba(132, 190, 239, 0.48);
+      border-radius: inherit;
+      background: linear-gradient(110deg, rgba(255, 255, 255, 0.14), transparent 55%);
+      transform: translateZ(-5px);
+      pointer-events: none;
+    }
+    .sharqawy-cta:hover {
+      filter: brightness(1.2);
+      box-shadow: 0 7px 0 #073664, 0 0 10px rgba(41, 103, 167, 0.92), 0 16px 27px rgba(7, 48, 91, 0.42), inset 0 2px 6px rgba(255, 255, 255, 0.5);
+      transform: translateZ(9px) scale(1.05);
+    }
+    .sharqawy-cta:focus-visible { outline: 2px solid #174b82; outline-offset: 3px; }
+    .sharqawy-cta-word {
+      display: inline-block;
+      font-family: 'Aref Ruqaa', 'Tajawal', sans-serif;
+      font-size: 1.28rem;
+      font-weight: 900;
+      color: #f4f9ff;
+      -webkit-text-stroke: 0.45px #0a2b50;
+      text-shadow: 0 1px 0 #0a2b50, 0 0 3px #d8eaff, 0 0 7px #174b82;
+      transform: translateZ(13px);
+    }
+    .sharqawy-close {
+      position: absolute;
+      top: -7px;
+      right: -7px;
+      z-index: 2;
+      width: 25px;
+      height: 25px;
+      border: 1px solid #fff;
+      border-radius: 50%;
+      color: #fff;
+      background: #d84c45;
+      font-size: 1rem;
+      font-weight: 900;
+      line-height: 1;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.24);
+      cursor: pointer;
+      pointer-events: auto;
+    }
+    .sharqawy-close:hover { background: #b93630; transform: scale(1.08); }
+    .sharqawy-message {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 14px);
+      left: 0;
+      width: min(330px, calc(100vw - 24px));
+      padding: 8px 10px;
+      color: #f4f9ff;
+      text-shadow: 0 0 3px #0a2b50, 0 0 8px #123c69, 0 0 14px rgba(5,31,62,0.88);
+      pointer-events: auto;
+      direction: rtl;
+      text-align: right;
+      transform: translateZ(12px);
+    }
+    .sharqawy-float-wrap.is-message-open .sharqawy-message { display: block; }
+    .sharqawy-float-wrap.message-below .sharqawy-message { top: calc(100% + 14px); bottom: auto; }
+    .sharqawy-float-wrap.message-align-right .sharqawy-message { left: auto; right: 0; }
+    .sharqawy-message-title { display: block; margin: 0 0 5px; font-size: 1rem; font-weight: 900; color: #c9e2ff; }
+    .sharqawy-message-text { margin: 0; font-size: 0.9rem; line-height: 1.7; font-weight: 800; }
+    .sharqawy-message-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 7px; }
+    .sharqawy-message-link { color: #c9e2ff; font-size: 0.86rem; font-weight: 900; text-decoration: underline; text-underline-offset: 3px; }
+    @keyframes sharqawyDrift {
+      0%, 100% { transform: translate3d(12px,14vh,0) rotateZ(-2deg) rotateY(-8deg); }
+      25% { transform: translate3d(calc(100vw - 100% - 14px),18vh,0) rotateZ(2deg) rotateY(8deg); }
+      50% { transform: translate3d(calc(100vw - 100% - 14px),calc(100vh - 100% - 24px),0) rotateZ(-2deg) rotateY(-7deg); }
+      75% { transform: translate3d(12px,calc(100vh - 100% - 24px),0) rotateZ(2deg) rotateY(8deg); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .sharqawy-float-wrap { animation: none; transform: translate3d(12px,14vh,0); }
+    }
+    .sharqawy-closed-word {
+      display: inline-block;
+      color: var(--accent);
+      font-family: 'Aref Ruqaa', 'Tajawal', sans-serif;
+      font-weight: 900;
+      animation: sharqawyWordFloat 3s ease-in-out infinite;
+    }
+    @keyframes sharqawyWordFloat {
+      0%, 100% { transform: translateY(0) rotateY(-7deg); }
+      50% { transform: translateY(-2px) rotateY(7deg); }
+    }
+    .support-closed-note {
+      border: 1px solid rgba(var(--accent-2-rgb), 0.5);
+      background: var(--surface-soft);
+    }
+    @media (max-width: 600px) {
+      .sharqawy-cta { width: 124px; min-height: 48px; padding: 7px 12px; }
+      .sharqawy-cta-word { font-size: 1.08rem; }
+      .sharqawy-close { width: 22px; height: 22px; top: -6px; right: -6px; }
+    }
   </style>
 </head>
 <body>
   <div id="screenBlackoutGuard" aria-hidden="true"></div>
   <div id="thuluthBg" aria-hidden="true">
-    <div class="thuluth-phrase">أنت جخ</div>
-    <div class="thuluth-phrase">أنت جخ</div>
-    <div class="thuluth-phrase">أنت جخ</div>
-    <div class="thuluth-phrase">أنت جخ</div>
-    <div class="thuluth-phrase">أنت جخ</div>
-    <div class="thuluth-phrase">أنت جخ</div>
+    <div class="thuluth-phrase">الشرقاوي</div>
+    <div class="thuluth-phrase">الشرقاوي</div>
+    <div class="thuluth-phrase">الشرقاوي</div>
+    <div class="thuluth-phrase">الشرقاوي</div>
+    <div class="thuluth-phrase">الشرقاوي</div>
+    <div class="thuluth-phrase">الشرقاوي</div>
+  </div>
+
+  <div class="sharqawy-float-wrap" id="sharqawyFloatWrap">
+    ${isLoggedInStudent
+      ? `<button type="button" class="sharqawy-cta" id="sharqawyPrayerTrigger" aria-label="الشرقاوي — عرض الدعاء"><span class="sharqawy-cta-word">الشرقاوي</span></button>`
+      : `<button type="button" class="sharqawy-cta" id="sharqawyRegisterTrigger" aria-label="الشرقاوي — بدء إنشاء حساب"><span class="sharqawy-cta-word">الشرقاوي</span></button>`
+    }
+    <div class="sharqawy-message" id="sharqawyMessage" role="status" aria-live="polite">
+      <strong class="sharqawy-message-title">${isLoggedInStudent ? "دعاء الرياضيات" : "جاهز تبدأ؟"}</strong>
+      <p class="sharqawy-message-text">${isLoggedInStudent ? "اللهم فهمني كما فهمت داوود وسليمان" : "أنشئ حسابك وابدأ رحلتك في الرياضيات."}</p>
+      ${isLoggedInStudent ? "" : `<div class="sharqawy-message-actions"><a class="sharqawy-message-link" href="/student?tab=register&step=1">إنشاء حساب</a><a class="sharqawy-message-link" href="/student?tab=login">تسجيل الدخول</a></div>`}
+    </div>
+    <button type="button" class="sharqawy-close" id="sharqawyCloseBtn" aria-label="إغلاق زر الشرقاوي">×</button>
   </div>
 
   ${showLandingAdminAvatar ? `
@@ -1866,7 +2029,7 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
       <div class="brand-box">
         <div class="brand-logo-badge">${PLATFORM_NAME}</div>
         <div>
-          <div style="font-weight:900; font-size:1.08rem; color:var(--accent);">${PLATFORM_NAME} — مع ${TEACHER_NAME}</div>
+          <div class="platform-name" style="font-weight:900; font-size:1.08rem; color:var(--accent);">${PLATFORM_NAME} — منصة الرياضيات</div>
           <div class="muted" style="font-size:0.78rem; font-weight:700;">الرياضيات من الإعدادي حتى الثانوي (شرح وتطبيق ومتابعة)</div>
         </div>
       </div>
@@ -1898,17 +2061,6 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
         ${(student || isStaff) ? `<a class="btn btn-red btn-sm" href="/logout">خروج</a>` : ""}
       </div>
     </header>
-
-    <div class="inline-dua-banner dua-done" id="inlineDuaBanner">
-      <div class="inline-dua-left">
-        <img class="inline-dua-avatar" src="${esc(settings.teacher_image)}" alt="الأستاذ" onerror="this.style.display='none';" />
-        <div>
-          <div class="inline-dua-text">اللهم فهمني كما فهمت داوود وسليمان</div>
-          <div class="inline-dua-sub">دعاء البداية • ${PLATFORM_NAME} — مع مدرس الرياضيات</div>
-        </div>
-      </div>
-      <button type="button" class="btn btn-out btn-sm" style="color:var(--txt);" id="hideDuaBtn">إخفاء</button>
-    </div>
 
     ${hasNotice ? `
       <div class="glow-notice-wrap">
@@ -1948,7 +2100,7 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
           </div>
 
           <div class="footer-brand-box">
-            <div class="footer-brand-emblem">${PLATFORM_NAME}</div>
+            <div class="footer-brand-emblem platform-name">${PLATFORM_NAME}</div>
             <div style="margin-top:8px; font-weight:900;">${TEACHER_NAME}</div>
             <div style="margin-top:3px; color:#b8c2d9; font-size:0.86rem;">${TEACHER_EXPERIENCE_YEARS} سنة خبرة في تدريس الرياضيات</div>
             <div class="footer-copyright-line">جميع الحقوق محفوظة © 2026</div>
@@ -2054,22 +2206,51 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
     })();
 
     (function setupDuaOnOpenOrRefresh() {
-      const banner = document.getElementById("inlineDuaBanner");
-      if (!banner) return;
-      const navEntries = performance.getEntriesByType ? performance.getEntriesByType("navigation") : [];
-      const navType = navEntries && navEntries.length > 0 ? navEntries[0].type : "navigate";
-      const alreadyShownInSession = sessionStorage.getItem("nb_dua_shown") === "1";
-      const isRefresh = navType === "reload";
-      function hideBanner() { banner.classList.add("dua-done"); }
-      if (!alreadyShownInSession || isRefresh) {
-        sessionStorage.setItem("nb_dua_shown", "1");
-        banner.classList.remove("dua-done");
-        const timer = setTimeout(hideBanner, 4000);
-        document.getElementById("hideDuaBtn")?.addEventListener("click", function () {
-          clearTimeout(timer);
-          hideBanner();
-        });
+      const floatWrap = document.getElementById("sharqawyFloatWrap");
+      const floatingCta = floatWrap?.querySelector(".sharqawy-cta");
+      const closeFloatButton = document.getElementById("sharqawyCloseBtn");
+      if (floatWrap && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+        document.addEventListener("pointermove", function (event) {
+          if (!floatingCta) return;
+          const rect = floatingCta.getBoundingClientRect();
+          const padding = 96;
+          const pointerNear =
+            event.clientX >= rect.left - padding &&
+            event.clientX <= rect.right + padding &&
+            event.clientY >= rect.top - padding &&
+            event.clientY <= rect.bottom + padding;
+          floatWrap.classList.toggle("is-pointer-near", pointerNear);
+        }, { passive: true });
       }
+      closeFloatButton?.addEventListener("click", function () {
+        floatWrap?.classList.add("is-dismissed");
+      });
+      const trigger = document.getElementById("sharqawyPrayerTrigger") ||
+        document.getElementById("sharqawyRegisterTrigger");
+      let hideTimer = 0;
+      function hideMessage() {
+        window.clearTimeout(hideTimer);
+        floatWrap?.classList.remove("is-message-open", "message-below", "message-align-right");
+      }
+      function showMessage() {
+        if (!floatWrap || !floatingCta) return;
+        window.clearTimeout(hideTimer);
+        const rect = floatingCta.getBoundingClientRect();
+        const messageWidth = Math.min(330, window.innerWidth - 24);
+        floatWrap.classList.toggle("message-below", rect.top < 170);
+        floatWrap.classList.toggle("message-align-right", rect.left + messageWidth > window.innerWidth - 12);
+        floatWrap.classList.add("is-message-open");
+        if (document.getElementById("sharqawyPrayerTrigger")) {
+          hideTimer = window.setTimeout(hideMessage, 8000);
+        }
+      }
+      trigger?.addEventListener("click", function () {
+        if (document.getElementById("sharqawyRegisterTrigger") && floatWrap?.classList.contains("is-message-open")) {
+          hideMessage();
+          return;
+        }
+        showMessage();
+      });
     })();
 
     (function initSingleSessionGuard() {
@@ -2134,10 +2315,11 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
         localStorage.setItem("jakh_sup_sid", sessionId);
       }
 
-      let visitorName = localStorage.getItem("jakh_sup_name") || ${safeJsonForScript(defaultChatName)} || "";
+      let visitorName = ${safeJsonForScript(defaultChatName)} || localStorage.getItem("jakh_sup_name") || "";
       let attachedSingleImage = "";
       let messages = [];
       let readAdminIds = [];
+      let chatSendError = "";
       try {
         readAdminIds = JSON.parse(localStorage.getItem("jakh_sup_read_ids") || "[]");
         if (!Array.isArray(readAdminIds)) readAdminIds = [];
@@ -2163,6 +2345,16 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
           .replace(/</g, "&lt;")
           .replace(/>/g, "&gt;")
           .replace(/"/g, "&quot;");
+      }
+
+      function isSupportChatOpenNow() {
+        const hourPart = new Intl.DateTimeFormat("en-US", {
+          timeZone: "Africa/Cairo",
+          hour: "2-digit",
+          hourCycle: "h23"
+        }).formatToParts(new Date()).find(function (part) { return part.type === "hour"; });
+        const hour = Number(hourPart && hourPart.value);
+        return hour >= 10 && hour < 19;
       }
 
       function getAdminMsgKey(m, idx) {
@@ -2289,11 +2481,22 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
       function renderChatMessages() {
         if (!bodyEl) return;
         const parts = [];
+        const chatOpen = isSupportChatOpenNow();
         parts.push('<div class="chat-bubble-bot">أهلاً بك مع الدعم الفني للأستاذ</div>');
-        if (!visitorName) {
+        if (!chatOpen) {
+          const nameForClosedNotice = visitorName || ${safeJsonForScript(defaultChatName)} || "طالبنا العزيز";
+          parts.push(
+            '<div class="chat-bubble-bot support-closed-note"><span class="sharqawy-closed-word">الشرقاوي</span> إحنا خارج أوقات العمل يا ' +
+            escLocal(nameForClosedNotice) +
+            '. الدردشة متاحة من 10 صباحاً إلى 7 مساءً بتوقيت القاهرة.</div>'
+          );
+        } else if (!visitorName) {
           parts.push('<div class="chat-bubble-bot">من فضلك ضع اسمك في الخانة بالأسفل لنبدأ.</div>');
         } else {
           parts.push('<div class="chat-bubble-bot">أهلاً بك يا ' + escLocal(visitorName) + '، ضع سؤالك</div>');
+        }
+        if (chatSendError) {
+          parts.push('<div class="chat-bubble-bot support-closed-note">' + escLocal(chatSendError) + '</div>');
         }
 
         messages.forEach(function (m) {
@@ -2320,12 +2523,12 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
         bodyEl.scrollTop = bodyEl.scrollHeight;
 
         if (nameBox && formEl) {
-          if (visitorName) {
-            nameBox.style.display = "none";
-            formEl.style.display = "block";
-          } else {
+          if (!visitorName) {
             nameBox.style.display = "flex";
             formEl.style.display = "none";
+          } else {
+            nameBox.style.display = "none";
+            formEl.style.display = "block";
           }
         }
         refreshAllBells();
@@ -2452,11 +2655,19 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
         e.preventDefault();
         const textVal = (msgInput?.value || "").trim();
         if (!textVal && !attachedSingleImage) return;
+        if (!isSupportChatOpenNow()) {
+          const nameForClosedNotice = visitorName || ${safeJsonForScript(defaultChatName)} || "طالبنا العزيز";
+          chatSendError = "الشرقاوي، إحنا خارج أوقات العمل يا " + nameForClosedNotice +
+            ". الدردشة متاحة من 10 صباحاً إلى 7 مساءً بتوقيت القاهرة.";
+          renderChatMessages();
+          return;
+        }
         if (!visitorName) {
           confirmVisitorName();
           return;
         }
 
+        chatSendError = "";
         const msgId = "m_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
         const payload = {
           session_id: sessionId,
@@ -2486,17 +2697,32 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
           });
-          if (res.ok) {
-            const data = await res.json();
-            if (Array.isArray(data.messages)) {
-              messages = data.messages;
-              renderChatMessages();
-            }
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            messages = messages.filter(function (message) { return String(message.id) !== msgId; });
+            chatSendError = data.code === "outside_working_hours"
+              ? "الشرقاوي، إحنا خارج أوقات العمل يا " +
+                (data.visitor_name || visitorName || "طالبنا العزيز") +
+                ". الدردشة متاحة من 10 صباحاً إلى 7 مساءً بتوقيت القاهرة."
+              : "تعذر إرسال رسالتك الآن. حاول مرة أخرى.";
+            renderChatMessages();
+            return;
           }
-        } catch {}
+          if (Array.isArray(data.messages)) {
+            messages = data.messages;
+            renderChatMessages();
+          }
+        } catch {
+          messages = messages.filter(function (message) { return String(message.id) !== msgId; });
+          chatSendError = "تعذر الاتصال بالدعم الفني. تحقق من اتصالك وحاول مرة أخرى.";
+          renderChatMessages();
+        }
       });
 
       renderChatMessages();
+      window.setInterval(function () {
+        if (winEl && winEl.classList.contains("open")) renderChatMessages();
+      }, 60000);
       document.addEventListener("visibilitychange", function () {
         window.clearTimeout(threadSyncTimer);
         if (document.visibilityState === "visible") syncThread();
@@ -2518,7 +2744,7 @@ function renderLanding(settings) {
     </div>
     <div class="hero-copy">
       <span class="hero-eyebrow"><span>★</span> مدرس الرياضيات</span>
-      <h1 class="hero-title">أتقن الرياضيات مع <span>${TEACHER_NAME}</span></h1>
+      <h1 class="hero-title">بوابتك الأولى لإتقان <span>الرياضيات</span></h1>
       <div class="hero-subtitle">شرح واضح وتدريب مستمر ونتائج أفضل</div>
       <p class="hero-description">
         منهج متكامل في الرياضيات من الصف الأول الإعدادي حتى الصف الثالث الثانوي، يجمع الشرح المبسط بالتدريبات والامتحانات والمتابعة المستمرة لمساعدة الطالب على فهم القواعد وحل المسائل بثقة وتحقيق أفضل النتائج.
@@ -2581,7 +2807,7 @@ function renderLanding(settings) {
       <div class="journey-step">
         <div class="journey-number">2</div>
         <h3>تابع الدروس والواجبات</h3>
-        <p>ادخل إلى الدروس والتمارين والمراجعات المصنّفة حسب الصف والشعبة.</p>
+        <p>ادخل إلى الدروس والتمارين والمراجعات المصنّفة حسب الصف.</p>
       </div>
       <div class="journey-step">
         <div class="journey-number">3</div>
@@ -2606,7 +2832,6 @@ function renderLanding(settings) {
 
 function renderStudentAuth(settings, authTab, step, draft, error, notice) {
   const gradeOpts = GRADES.map(g => `<option value="${esc(g)}">${esc(g)}</option>`).join("");
-  const trackOpts = TRACKS.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join("");
   const govOpts = EGYPT_GOVERNORATES.map(gv => `<option value="${esc(gv)}">${esc(gv)}</option>`).join("");
 
   if (authTab === "login") {
@@ -2660,7 +2885,6 @@ function renderStudentAuth(settings, authTab, step, draft, error, notice) {
           <div class="field"><label>رقم هاتف الطالب *</label><input name="phone" type="tel" required autocomplete="off" placeholder="01xxxxxxxxx" /></div>
           <div class="grid2">
             <div class="field"><label>الصف الدراسي *</label><select name="grade">${gradeOpts}</select></div>
-            <div class="field"><label>الشعبة *</label><select name="track">${trackOpts}</select></div>
           </div>
           <div class="field"><label>رقم هاتف ولي الأمر (يجب أن يختلف عن رقم الطالب) *</label><input name="parent_phone" type="tel" required autocomplete="off" placeholder="01xxxxxxxxx" /></div>
           <div class="field"><label>المحافظة *</label><select name="governorate" required>${govOpts}</select></div>
@@ -2728,7 +2952,6 @@ function renderStudentAuth(settings, authTab, step, draft, error, notice) {
           <input type="hidden" name="phone" value="${esc(draft.phone)}" />
           <div class="field"><label>الاسم الرباعي</label><input type="text" value="${esc(fullName)}" readonly /></div>
           <div class="field"><label>الصف الدراسي *</label><select name="grade">${gradeOpts}</select></div>
-          <div class="field"><label>الشعبة *</label><select name="track">${trackOpts}</select></div>
           <div class="field"><label>رقم هاتف ولي الأمر (يجب أن يختلف عن رقم الطالب) *</label><input name="parent_phone" id="regParentPhone" type="tel" required autocomplete="off" placeholder="01xxxxxxxxx" /></div>
           <div class="grid2">
             <div class="field"><label>المحافظة *</label><select name="governorate" required>${govOpts}</select></div>
@@ -2760,6 +2983,10 @@ function renderStudentAuth(settings, authTab, step, draft, error, notice) {
 function renderStudentDash(settings, student, state) {
   const isCenterStudent = Boolean(student.is_center_student || student.center_code);
   const unlocked = isCenterStudent ? new Set(BRANCHES) : new Set(student.branches || []);
+  const activeSubjectNames = (Array.isArray(student.subjects) ? student.subjects : [])
+    .filter(item => typeof item === "string" || (item && String(item.grade || "") === String(student.grade || "")))
+    .map(item => typeof item === "string" ? item : String(item?.subject || ""))
+    .filter(Boolean);
   const unlockedCount = unlocked.size;
   const totalBranches = BRANCHES.length;
   const progressPct = Math.round((unlockedCount / totalBranches) * 100);
@@ -2767,6 +2994,7 @@ function renderStudentDash(settings, student, state) {
 
   const section = state.section || "dashboard";
   const branchParam = state.branch || "";
+  const subjectParam = state.subject || "";
   const forumBranchParam = state.forumBranch || BRANCHES[0];
   const lectureId = state.lectureId || "";
   const examIdParam = state.examId || "";
@@ -2774,7 +3002,18 @@ function renderStudentDash(settings, student, state) {
   const notice = state.notice || "";
 
   const allLectures = sortLectures(state.lectures || []);
-  const allExams = state.exams || [];
+  const gradeLectures = allLectures.filter(l => !l.grade || String(l.grade) === String(student.grade));
+  const allExams = (state.exams || []).filter(ex => {
+    if (ex.grade && String(ex.grade) !== String(student.grade)) return false;
+    const subject = ex.subject || (BRANCHES.includes(String(ex.branch || "")) ? "الرياضيات" : "");
+    if (subject === "الرياضيات") return unlocked.has(String(ex.branch || ""));
+    if (SUBJECT_CODE_SUBJECTS.includes(subject)) return studentHasSubjectAccess(student, subject);
+    return true;
+  });
+  const gradeSubjects = Array.from(new Set([
+    ...(SUBJECTS_BY_GRADE[student.grade] || []),
+    ...gradeLectures.map(getLectureSubject).filter(subject => subject && subject !== "عام" && subject !== "غير محدد")
+  ]));
   const mySubmissions = state.submissions || [];
   const myDrafts = state.drafts || [];
   const myWatchedSet = new Set((state.watched || []).map(w => String(w.lecture_id)));
@@ -2787,6 +3026,13 @@ function renderStudentDash(settings, student, state) {
 
   function getLessonHomework(lecId) {
     return allExams.find(ex => String(ex.lecture_id || "") === String(lecId));
+  }
+
+  function getExamSubjectLabel(exam) {
+    if (exam.subject === "الرياضيات" && BRANCHES.includes(String(exam.branch || ""))) {
+      return `الرياضيات • ${exam.branch}`;
+    }
+    return exam.subject || exam.branch || "عام";
   }
 
   function isLectureUnlockedForStudent(branchList, idx) {
@@ -2819,7 +3065,7 @@ function renderStudentDash(settings, student, state) {
 
   const branchCardsHtml = BRANCHES.map(br => {
     const isUnlocked = unlocked.has(br);
-    const brLectures = allLectures.filter(l => l.branch === br);
+    const brLectures = gradeLectures.filter(l => l.branch === br);
     return `
       <div class="course-card">
         <div>
@@ -2832,7 +3078,7 @@ function renderStudentDash(settings, student, state) {
             <img class="book-thumb" src="${esc(settings.teacher_image)}" alt="${esc(br)}" onerror="this.style.display='none';" />
           </div>
           <div class="course-body">
-            <div class="course-title">منهج ${esc(br)} — ${esc(student.grade)} (${esc(student.track)})</div>
+            <div class="course-title">منهج ${esc(br)} — ${esc(student.grade)}</div>
             <p class="muted" style="font-size:0.84rem; margin-bottom:12px;">
               ${isUnlocked ? "افتح المحاضرة واستعرض أقسامها ومحتواها وحل الواجب." : "هذا الفرع يحتاج إلى كود تفعيل خاص بالفرع لفتحه."}
             </p>
@@ -2848,17 +3094,50 @@ function renderStudentDash(settings, student, state) {
     `;
   }).join("");
 
-  const branchDetailHtml = branchParam ? (() => {
-    const canEnter = unlocked.has(branchParam);
-    const list = allLectures.filter(l => l.branch === branchParam);
+  const subjectCardsHtml = gradeSubjects.map(subject => {
+    const count = gradeLectures.filter(l => getLectureSubject(l) === subject).length;
+    const isUnlocked = subject === "الرياضيات" || studentHasSubjectAccess(student, subject);
+    return `
+      <div class="course-card">
+        <div>
+          <div class="course-banner">
+            <div>
+              <span class="pill" style="background:rgba(255,255,255,0.22); color:#fff;">${subject === "الرياضيات" ? "فروع رياضيات" : (isUnlocked ? "مفعل ✓" : "مغلق 🔒")}</span>
+              <div style="font-size:1.22rem; font-weight:900; margin-top:6px;">${esc(subject)}</div>
+              <div style="font-size:0.8rem; opacity:0.92;">${count} محاضرة • ${subject === "الرياضيات" ? "تفعيل الفروع منفصل" : `${COURSE_PRICE_EGP} ج`}</div>
+            </div>
+            <img class="book-thumb" src="${esc(settings.teacher_image)}" alt="${esc(subject)}" onerror="this.style.display='none';" />
+          </div>
+          <div class="course-body">
+            <div class="course-title">${esc(student.grade)} — ${esc(subject)}</div>
+            <p class="muted" style="font-size:0.84rem; margin-bottom:12px;">${subject === "الرياضيات" ? "اختر فرع الرياضيات الذي تريد دراسته." : (isUnlocked ? "المحاضرات والامتحانات التي يضيفها الأدمن لهذه المادة ستظهر هنا." : "هذه المادة تحتاج إلى كود تفعيل خاص بها.")}</p>
+          </div>
+        </div>
+        <div style="padding:0 16px 16px;">
+          ${isUnlocked
+            ? `<a class="btn btn-blue btn-sm" style="width:100%;" href="/student?section=subject&subject=${encodeURIComponent(subject)}">دخول المادة</a>`
+            : `<a class="btn btn-teal btn-sm" style="width:100%;" href="/student?section=codes">تفعيل / طلب كود (${COURSE_PRICE_EGP} ج)</a>`
+          }
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  const isSubjectPage = section === "subject" && subjectParam && subjectParam !== "الرياضيات";
+  const branchDetailHtml = (branchParam || isSubjectPage) ? (() => {
+    const courseTitle = isSubjectPage ? subjectParam : `فرع ${branchParam}`;
+    const canEnter = isSubjectPage ? studentHasSubjectAccess(student, subjectParam) : unlocked.has(branchParam);
+    const list = isSubjectPage
+      ? gradeLectures.filter(l => getLectureSubject(l) === subjectParam)
+      : gradeLectures.filter(l => l.branch === branchParam);
     const wmText = `${student.full_name} • ${student.phone} • ${PLATFORM_NAME}`;
     const denominator = Math.max(list.length, 99);
 
     return `
       <div class="jakh-week-banner">
         <div>
-          <div style="font-size:1.34rem; font-weight:900;">فرع ${esc(branchParam)} — ${esc(student.grade)}</div>
-          <div style="font-size:0.88rem; opacity:0.95; margin-top:2px;">${PLATFORM_NAME} • الشعبة: ${esc(student.track)}</div>
+          <div style="font-size:1.34rem; font-weight:900;">${esc(courseTitle)} — ${esc(student.grade)}</div>
+          <div style="font-size:0.88rem; opacity:0.95; margin-top:2px;">${PLATFORM_NAME}</div>
         </div>
         <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
           <span class="you-here-pill">أنت هنا</span>
@@ -2874,7 +3153,10 @@ function renderStudentDash(settings, student, state) {
 
       ${!canEnter ? `
         <div class="card">
-          <div class="msg-err">هذا الفرع مغلق على حسابك حالياً. فعّله بكود خاص بفرع (${esc(branchParam)}) أو اطلب الكود عبر واتساب.</div>
+          <div class="msg-err">${isSubjectPage
+            ? `مادة (${esc(subjectParam)}) مغلقة على حسابك حالياً. فعّلها بكود خاص بالمادة أو اطلب الكود عبر واتساب.`
+            : `هذا الفرع مغلق على حسابك حالياً. فعّله بكود خاص بفرع (${esc(branchParam)}) أو اطلب الكود عبر واتساب.`
+          }</div>
           <form method="post" action="/student/redeem-code" style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
             <div class="field" style="flex:1; min-width:220px; margin:0;">
               <label>كود تفعيل الفرع (لمرة واحدة)</label>
@@ -2899,14 +3181,14 @@ function renderStudentDash(settings, student, state) {
             const absencePayUrl = buildStudentPaymentWaUrl(
               settings,
               student,
-              `حصة غياب: ${l.title} (فرع ${l.branch})`,
+              `حصة غياب: ${l.title} (${getLectureSubject(l)})`,
               ABSENCE_LESSON_PRICE_EGP,
               ["سبب الفتح: تعويض غياب الحصة"]
             );
 
             const rawCustomItems = Array.isArray(l.custom_items) ? l.custom_items : [];
             const customItems = rawCustomItems.length > 0 ? rawCustomItems : [
-              { title: "الكتاب", note: `ملخص ومذكرة ${l.title} في فرع ${l.branch}.`, url: "", image_url: "" },
+              { title: "الكتاب", note: `ملخص ومذكرة ${l.title} في مادة ${getLectureSubject(l)}.`, url: "", image_url: "" },
               { title: "الشرح", note: "", url: l.video_url || "", image_url: "" },
               { title: "المذاكرة", note: `راجع قواعد وأمثلة ${l.title} ثم ابدأ حل الواجب.`, url: "", image_url: "" },
               { title: "حل المسألة", note: "اكتب سؤالك أو صوّر حلك ليراجعه الأستاذ.", url: "", image_url: "" },
@@ -2995,7 +3277,7 @@ function renderStudentDash(settings, student, state) {
                 </div>
               </div>
             `;
-          }).join("") : `<div class="card"><p class="muted">لا توجد محاضرات مضافة لهذا الفرع حتى الآن.</p></div>`}
+          }).join("") : `<div class="card"><p class="muted">لا توجد محاضرات مضافة لهذه المادة حتى الآن. ستظهر المحاضرات والامتحانات هنا عندما يضيفها الأدمن.</p></div>`}
         </div>
 
         <script>
@@ -3046,7 +3328,7 @@ function renderStudentDash(settings, student, state) {
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
           <div>
-            <span class="pill pill-ok">${esc(ex.branch || "عام")}</span>
+            <span class="pill pill-ok">${esc(getExamSubjectLabel(ex))}</span>
             <h2 style="font-weight:900; margin-top:6px;">${esc(ex.title)}</h2>
             <div class="muted" style="font-size:0.85rem;">عدد الأسئلة: ${questions.length} • يُسلّم مرة واحدة فقط</div>
           </div>
@@ -3111,7 +3393,7 @@ function renderStudentDash(settings, student, state) {
     return `
       <div class="row">
         <div>
-          <span class="pill pill-ok">${esc(ex.branch || "عام")}</span>
+          <span class="pill pill-ok">${esc(getExamSubjectLabel(ex))}</span>
           <div style="font-weight:900; font-size:1rem; margin-top:4px;">${esc(ex.title)}</div>
           <div class="muted" style="font-size:0.82rem;">عدد الأسئلة: ${qCount}</div>
         </div>
@@ -3135,7 +3417,7 @@ function renderStudentDash(settings, student, state) {
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
           <div>
-            <span class="pill pill-ok">${esc(sub.branch || "عام")}</span>
+            <span class="pill pill-ok">${esc(getExamSubjectLabel(sub))}</span>
             <h3 style="font-weight:900; margin-top:4px;">${esc(sub.exam_title || "اختبار")}</h3>
           </div>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -3188,8 +3470,8 @@ function renderStudentDash(settings, student, state) {
     amount: Number(d.amount || 0)
   }));
 
-  const lectureSelectOptions = allLectures.map(l =>
-    `<option value="${esc(l.title)} (${esc(l.branch)})">محاضرة: ${esc(l.title)} — فرع ${esc(l.branch)}</option>`
+  const lectureSelectOptions = gradeLectures.map(l =>
+    `<option value="${esc(l.title)} (${esc(getLectureSubject(l))})">${esc(l.grade || "")} — ${esc(getLectureSubject(l))}: ${esc(l.title)}</option>`
   ).join("");
 
   let mainContentHtml = "";
@@ -3230,13 +3512,13 @@ function renderStudentDash(settings, student, state) {
         <div class="card" style="margin-bottom:0;">
           <h3 style="font-weight:900; margin-bottom:6px;">أهلاً بك يا ${esc(student.full_name)} في ${PLATFORM_NAME}</h3>
           <p class="muted" style="font-size:0.88rem; margin-bottom:12px;">
-            الصف: <strong>${esc(student.grade)}</strong> • الشعبة: <strong>${esc(student.track)}</strong> • رقم الهاتف: <strong>${esc(student.phone)}</strong> • ولي الأمر: <strong>${esc(student.parent_phone || "-")}</strong>
+            الصف: <strong>${esc(student.grade)}</strong> • رقم الهاتف: <strong>${esc(student.phone)}</strong> • ولي الأمر: <strong>${esc(student.parent_phone || "-")}</strong>
           </p>
           <div style="margin-bottom:12px;">
             ${isCenterStudent ? `<span class="pill pill-ok">طالب سنتر — كود: ${esc(student.center_code || "-")}</span>` : (
-              (student.branches || []).length
-                ? (student.branches || []).map(b => `<span class="pill pill-ok" style="margin-left:4px;">${esc(b)}</span>`).join("")
-                : `<span class="pill pill-warn">طالب منصة • لم يتم تفعيل أي فرع بعد</span>`
+              [...(student.branches || []), ...activeSubjectNames].length
+                ? [...(student.branches || []), ...activeSubjectNames].map(b => `<span class="pill pill-ok" style="margin-left:4px;">${esc(b)}</span>`).join("")
+                : `<span class="pill pill-warn">طالب منصة • لم يتم تفعيل أي مادة أو فرع بعد</span>`
             )}
           </div>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -3247,9 +3529,27 @@ function renderStudentDash(settings, student, state) {
         </div>
       </div>
 
-      <h3 style="font-weight:900; margin-bottom:12px;">فروع الرياضيات السبعة</h3>
+      <h3 style="font-weight:900; margin-bottom:12px;">مواد ${esc(student.grade)}</h3>
+      <div class="course-grid">${subjectCardsHtml}</div>
+    `;
+  } else if (section === "subjects") {
+    mainContentHtml = `
+      <div class="card">
+        <h2 style="font-weight:900; margin-bottom:6px;">المواد الدراسية</h2>
+        <p class="muted" style="font-size:0.88rem;">اختر مادة الصف ${esc(student.grade)} لعرض محاضراتها وامتحاناتها.</p>
+      </div>
+      <div class="course-grid">${subjectCardsHtml}</div>
+    `;
+  } else if (section === "subject" && subjectParam === "الرياضيات") {
+    mainContentHtml = `
+      <div class="card">
+        <h2 style="font-weight:900; margin-bottom:6px;">الرياضيات — ${esc(student.grade)}</h2>
+        <p class="muted" style="font-size:0.88rem;">اختر فرع الرياضيات لعرض المحاضرات والواجبات الخاصة به.</p>
+      </div>
       <div class="course-grid">${branchCardsHtml}</div>
     `;
+  } else if (section === "subject") {
+    mainContentHtml = branchDetailHtml;
   } else if (section === "branch") {
     mainContentHtml = branchDetailHtml;
   } else if (section === "forum") {
@@ -3311,22 +3611,24 @@ function renderStudentDash(settings, student, state) {
   } else if (section === "codes") {
     mainContentHtml = `
       <div class="card">
-        <h2 style="font-weight:900; margin-bottom:8px;">تفعيل الفروع بالأكواد</h2>
-        <p class="muted" style="font-size:0.88rem; margin-bottom:14px;">لو معاك كود تفعيل جاهز أدخله هنا ليُفعّل الفرع فوراً (يُستخدم مرة واحدة).</p>
+        <h2 style="font-weight:900; margin-bottom:8px;">تفعيل المواد والفروع بالأكواد</h2>
+        <p class="muted" style="font-size:0.88rem; margin-bottom:14px;">أدخل كود التفعيل الخاص بالمادة أو الفرع؛ كل كود يُستخدم مرة واحدة.</p>
         <form method="post" action="/student/redeem-code" class="grid2">
           <div class="field"><label>كود التفعيل *</label><input name="code" type="text" required placeholder="مثال: BR-XXXXXX" /></div>
           <div class="field" style="display:flex; align-items:flex-end;"><button type="submit" class="btn btn-teal" style="width:100%;">تفعيل الكود</button></div>
         </form>
         <div style="margin-top:12px;">
-          <strong>الفروع المفعلة حالياً:</strong>
-          ${isCenterStudent ? `<span class="pill pill-ok">حساب سنتر (كود: ${esc(student.center_code || "-")})</span>` : (
-            (student.branches || []).length ? (student.branches || []).map(b => `<span class="pill pill-ok">${esc(b)}</span>`).join(" ") : `<span class="muted">لا يوجد</span>`
+          <strong>المواد والفروع المفعلة حالياً:</strong>
+          ${isCenterStudent ? `<span class="pill pill-ok">حساب سنتر — فروع الرياضيات (كود: ${esc(student.center_code || "-")})</span>` : (
+            [...(student.branches || []), ...activeSubjectNames].length
+              ? [...(student.branches || []), ...activeSubjectNames].map(item => `<span class="pill pill-ok">${esc(item)}</span>`).join(" ")
+              : `<span class="muted">لا يوجد</span>`
           )}
         </div>
       </div>
 
       <div class="card">
-        <h2 style="font-weight:900; margin-bottom:6px;">طلب كود لتفعيل محاضرة أو فرع عبر واتساب</h2>
+        <h2 style="font-weight:900; margin-bottom:6px;">طلب كود لتفعيل مادة أو فرع عبر واتساب</h2>
         <p class="muted" style="font-size:0.88rem; margin-bottom:14px;">
           سعر الكورس <strong>${COURSE_PRICE_EGP} ج</strong>. عند الضغط على طلب الكود سترسل المنصة تلقائياً اسمك ورقمك ونوعك (طالب سنتر أم منصة) وكودك إن كنت طالب سنتر.
         </p>
@@ -3334,15 +3636,16 @@ function renderStudentDash(settings, student, state) {
         <form id="waCodeRequestForm">
           <div class="grid2">
             <div class="field">
-              <label>اختر الفرع *</label>
+              <label>اختر الفرع أو المادة *</label>
               <select id="reqBranchSelect">
                 ${BRANCHES.map(b => `<option value="فرع ${esc(b)}">فرع ${esc(b)} (${COURSE_PRICE_EGP} ج)</option>`).join("")}
+                ${(SUBJECTS_BY_GRADE[student.grade] || []).filter(subject => subject !== "الرياضيات").map(subject => `<option value="مادة ${esc(subject)}">مادة ${esc(subject)} (${COURSE_PRICE_EGP} ج)</option>`).join("")}
               </select>
             </div>
             <div class="field">
               <label>أو اختر محاضرة محددة (اختياري)</label>
               <select id="reqLectureSelect">
-                <option value="">— كل محاضرات الفرع المختار —</option>
+                <option value="">— كل محاضرات المادة أو الفرع —</option>
                 ${lectureSelectOptions}
               </select>
             </div>
@@ -3493,14 +3796,13 @@ function renderStudentDash(settings, student, state) {
         <div class="row"><span>نوع الحساب</span><strong>${isCenterStudent ? `طالب سنتر (كود: ${esc(student.center_code || "-")})` : "طالب منصة"}</strong></div>
         <div class="row"><span>رقم هاتف ولي الأمر</span><strong>${esc(student.parent_phone || "-")}</strong></div>
         <div class="row"><span>الصف الدراسي</span><strong>${esc(student.grade)}</strong></div>
-        <div class="row"><span>الشعبة</span><strong>${esc(student.track)}</strong></div>
         <div class="row"><span>المحافظة</span><strong>${esc(student.governorate || "-")}</strong></div>
       </div>
     `;
   }
 
-  const branchSubLinks = BRANCHES.map(b => `
-    <a class="sub-link ${section === "branch" && branchParam === b ? "active" : ""}" href="/student?section=branch&branch=${encodeURIComponent(b)}">${esc(b)}</a>
+  const subjectSubLinks = gradeSubjects.map(subject => `
+    <a class="sub-link ${section === "subject" && subjectParam === subject ? "active" : ""}" href="/student?section=subject&subject=${encodeURIComponent(subject)}">${esc(subject)}</a>
   `).join("");
 
   return `
@@ -3516,8 +3818,8 @@ function renderStudentDash(settings, student, state) {
         <button type="button" class="collapse-btn" id="collapseDrawerBtn">⇄</button>
       </div>
       <a class="nav-item-link ${section === "dashboard" ? "active" : ""}" href="/student?section=dashboard"><span>🏠</span><span class="nav-label">الرئيسية</span></a>
-      <a class="nav-item-link ${section === "branch" ? "active" : ""}" href="/student?section=branch&branch=${encodeURIComponent(branchParam || BRANCHES[0])}"><span>📐</span><span class="nav-label">فروع الرياضيات</span></a>
-      <div class="sub-nav">${branchSubLinks}</div>
+      <a class="nav-item-link ${(section === "subjects" || section === "subject" || section === "branch") ? "active" : ""}" href="/student?section=subjects"><span>📚</span><span class="nav-label">المواد الدراسية</span></a>
+      <div class="sub-nav">${subjectSubLinks}</div>
       <a class="nav-item-link ${section === "forum" ? "active" : ""}" href="/student?section=forum&forum_branch=${encodeURIComponent(forumBranchParam)}"><span>💬</span><span class="nav-label">المنتدى</span></a>
       <a class="nav-item-link ${section === "codes" ? "active" : ""}" href="/student?section=codes"><span>🔑</span><span class="nav-label">تفعيل وطلب كود</span></a>
       <a class="nav-item-link ${(section === "exams" || section === "solve-exam") ? "active" : ""}" href="/student?section=exams"><span>📝</span><span class="nav-label">الواجبات والامتحانات</span></a>
@@ -3955,7 +4257,7 @@ function renderAdminPage(settings, isAuthed, data, section, error, notice) {
   const codesRows = (data.codes || []).slice(-25).reverse().map(c => `
     <div class="row">
       <div>
-        <strong class="copyable-code-val">${esc(c.code)}</strong> — <span class="pill pill-ok">${esc(c.type === "center" ? "كود سنتر (يبدأ بـ MO وأرقام)" : "كود فرع: " + (c.branch || ""))}</span>
+        <strong class="copyable-code-val">${esc(c.code)}</strong> — <span class="pill pill-ok">${esc(c.type === "center" ? "كود سنتر (يبدأ بـ MO وأرقام)" : c.type === "subject" ? `كود مادة ${c.subject || ""} — ${c.grade || ""}` : "كود فرع: " + (c.branch || ""))}</span>
         <span class="pill ${c.used ? "pill-warn" : "pill-ok"}" style="margin-right:6px;">${c.used ? "مستخدم (" + esc(c.used_by || "") + ")" : "متاح"}</span>
       </div>
       <div style="display:flex; gap:8px; align-items:center;">
@@ -4013,8 +4315,8 @@ function renderAdminPage(settings, isAuthed, data, section, error, notice) {
     return `
       <div class="row">
         <div>
-          <strong>${esc(l.title)}</strong> — <span class="pill pill-ok">${esc(l.branch)}</span>
-          <div class="muted" style="font-size:0.8rem;">${esc(l.grade || "")} • ${esc(l.track || "")} • ترتيب: ${esc(l.order_num ?? 0)} • عناصر داخل المحاضرة: ${cItemsCount}</div>
+          <strong>${esc(l.title)}</strong> — <span class="pill pill-ok">${esc(getLectureSubject(l))}</span>
+          <div class="muted" style="font-size:0.8rem;">${esc(l.grade || "")}${getLectureSubject(l) === "الرياضيات" ? ` • فرع ${esc(l.branch)}` : ""} • ترتيب: ${esc(l.order_num ?? 0)} • عناصر داخل المحاضرة: ${cItemsCount}</div>
           <div style="margin-top:4px;">
             ${linkedHw
               ? `<span class="pill pill-ok">مرتبط بواجب: ${esc(linkedHw.title)} (${Array.isArray(linkedHw.questions) ? linkedHw.questions.length : 0} أسئلة)</span>`
@@ -4039,9 +4341,9 @@ function renderAdminPage(settings, isAuthed, data, section, error, notice) {
     return `
       <div class="row">
         <div>
-          <strong>${esc(ex.title)}</strong> — <span class="pill pill-ok">${esc(ex.branch || "عام")}</span>
+          <strong>${esc(ex.title)}</strong> — <span class="pill pill-ok">${esc(ex.subject || ex.branch || "عام")}</span>
           <div class="muted" style="font-size:0.8rem;">
-            عدد الأسئلة: ${qLen} ${lec ? `• واجب محاضرة: ${esc(lec.title)}` : "• اختبار عام"}
+            ${esc(ex.grade || "")} • عدد الأسئلة: ${qLen} ${lec ? `• واجب محاضرة: ${esc(lec.title)}` : "• اختبار عام"}
           </div>
         </div>
         <form method="post" action="/admin/delete-exam" style="margin:0;">
@@ -4120,7 +4422,6 @@ function renderAdminPage(settings, isAuthed, data, section, error, notice) {
         phone: String(st.phone || ""),
         center_code: String(st.center_code || ""),
         grade: String(st.grade || ""),
-        track: String(st.track || ""),
         unlocked_lectures: Array.isArray(st.unlocked_lectures) ? st.unlocked_lectures.map(String) : [],
         locked_lectures: Array.isArray(st.locked_lectures) ? st.locked_lectures.map(String) : []
       }));
@@ -4308,18 +4609,27 @@ function renderAdminPage(settings, isAuthed, data, section, error, notice) {
   } else if (activeSec === "codes") {
     sectionHtml = `
       <div class="card">
-        <h3 style="font-weight:900; margin-bottom:10px;">توليد أكواد (سنتر تبدأ بـ MO وأرقام فقط / فروع)</h3>
+        <h3 style="font-weight:900; margin-bottom:10px;">توليد أكواد السنتر والفروع والمواد</h3>
         <form method="post" action="/admin/generate-codes" class="grid3">
           <div class="field">
             <label>نوع الكود</label>
-            <select name="code_type">
+            <select name="code_type" id="adminCodeTypeSelect">
               <option value="center">كود سنتر (MO + أرقام فقط، لمرة واحدة)</option>
               <option value="branch">كود تفعيل فرع</option>
+              <option value="subject">كود تفعيل مادة</option>
             </select>
           </div>
-          <div class="field">
+          <div class="field" id="adminCodeBranchField">
             <label>الفرع (لكود الفرع)</label>
             <select name="branch">${BRANCHES.map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join("")}</select>
+          </div>
+          <div class="field" id="adminCodeSubjectGradeField">
+            <label>الصف (لكود المادة)</label>
+            <select name="subject_grade" id="adminSubjectCodeGrade">${GRADES.map(grade => `<option value="${esc(grade)}">${esc(grade)}</option>`).join("")}</select>
+          </div>
+          <div class="field" id="adminCodeSubjectField">
+            <label>المادة (لكود المادة)</label>
+            <select name="subject" id="adminSubjectCodeSelect">${SUBJECT_CODE_SUBJECTS.filter(subject => (SUBJECTS_BY_GRADE[GRADES[0]] || []).includes(subject)).map(subject => `<option value="${esc(subject)}">${esc(subject)}</option>`).join("")}</select>
           </div>
           <div class="field">
             <label>عدد الأكواد</label>
@@ -4351,6 +4661,28 @@ function renderAdminPage(settings, isAuthed, data, section, error, notice) {
 
       <script>
         (function () {
+          const typeSelect = document.getElementById("adminCodeTypeSelect");
+          const branchField = document.getElementById("adminCodeBranchField");
+          const subjectGradeField = document.getElementById("adminCodeSubjectGradeField");
+          const subjectField = document.getElementById("adminCodeSubjectField");
+          const subjectGradeSelect = document.getElementById("adminSubjectCodeGrade");
+          const subjectSelect = document.getElementById("adminSubjectCodeSelect");
+          const subjectsByGrade = ${safeJsonForScript(SUBJECTS_BY_GRADE)};
+          function updateCodeFields() {
+            branchField.style.display = typeSelect.value === "branch" ? "" : "none";
+            subjectGradeField.style.display = typeSelect.value === "subject" ? "" : "none";
+            subjectField.style.display = typeSelect.value === "subject" ? "" : "none";
+            const subjects = (subjectsByGrade[subjectGradeSelect.value] || []).filter(function (subject) {
+              return subject !== "الرياضيات";
+            });
+            subjectSelect.innerHTML = subjects.map(function (subject) {
+              return '<option value="' + subject.replace(/"/g, "&quot;") + '">' + subject + '</option>';
+            }).join("");
+          }
+          typeSelect.addEventListener("change", updateCodeFields);
+          subjectGradeSelect.addEventListener("change", updateCodeFields);
+          updateCodeFields();
+
           document.querySelectorAll(".copy-code-btn").forEach(function (btn) {
             btn.addEventListener("click", function () {
               const codeStr = btn.getAttribute("data-code") || "";
@@ -4381,10 +4713,11 @@ function renderAdminPage(settings, isAuthed, data, section, error, notice) {
           <input type="hidden" name="custom_items_json" id="customItemsJsonInput" />
           <div class="grid2">
             <div class="field"><label>عنوان المحاضرة *</label><input name="title" type="text" required placeholder="مثال: المحاضرة الأولى — المبتدأ والخبر" /></div>
-            <div class="field"><label>الفرع *</label><select name="branch">${BRANCHES.map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join("")}</select></div>
-            <div class="field"><label>الصف الدراسي</label><select name="grade">${GRADES.map(g => `<option value="${esc(g)}">${esc(g)}</option>`).join("")}</select></div>
-            <div class="field"><label>الشعبة</label><select name="track">${TRACKS.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join("")}</select></div>
-            <div class="field"><label>رقم ترتيب الدرس في الفرع</label><input name="order_num" type="number" min="1" value="${allLectures.length + 1}" /></div>
+            <div class="field"><label>الصف الدراسي *</label><select name="grade" id="lectureGradeSelect">${GRADES.map(g => `<option value="${esc(g)}">${esc(g)}</option>`).join("")}</select></div>
+            <div class="field"><label>المادة *</label><select name="subject" id="lectureSubjectSelect">${SUBJECTS_BY_GRADE[GRADES[0]].map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join("")}</select></div>
+            <div class="field" id="lectureMathBranchField"><label>فرع الرياضيات *</label><select name="branch" id="lectureBranchSelect">${BRANCHES.map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join("")}</select></div>
+            <input type="hidden" name="branch" id="lectureGeneralBranch" value="عام" disabled />
+            <div class="field"><label>رقم ترتيب الدرس في المادة</label><input name="order_num" type="number" min="1" value="${allLectures.length + 1}" /></div>
             <div class="field"><label>رابط الفيديو الرئيسي (اختياري إذا أضفت عناصر بالأسفل)</label><input name="video_url" type="text" placeholder="https://..." /></div>
           </div>
 
@@ -4403,6 +4736,26 @@ function renderAdminPage(settings, isAuthed, data, section, error, notice) {
 
       <script>
         (function () {
+          const subjectsByGrade = ${safeJsonForScript(SUBJECTS_BY_GRADE)};
+          const gradeSelect = document.getElementById("lectureGradeSelect");
+          const subjectSelect = document.getElementById("lectureSubjectSelect");
+          const mathBranchField = document.getElementById("lectureMathBranchField");
+          const mathBranchSelect = document.getElementById("lectureBranchSelect");
+          const generalBranch = document.getElementById("lectureGeneralBranch");
+          function refreshLectureSubjects() {
+            const subjects = subjectsByGrade[gradeSelect.value] || [];
+            subjectSelect.innerHTML = subjects.map(function (subject) {
+              return '<option value="' + subject.replace(/"/g, "&quot;") + '">' + subject + '</option>';
+            }).join("");
+            const isMath = subjectSelect.value === "الرياضيات";
+            mathBranchField.style.display = isMath ? "" : "none";
+            mathBranchSelect.disabled = !isMath;
+            generalBranch.disabled = isMath;
+          }
+          gradeSelect.addEventListener("change", refreshLectureSubjects);
+          subjectSelect.addEventListener("change", refreshLectureSubjects);
+          refreshLectureSubjects();
+
           const builder = document.getElementById("customLectureItemsBuilder");
           const form = document.getElementById("addLectureCustomForm");
           const hiddenJson = document.getElementById("customItemsJsonInput");
@@ -4498,7 +4851,7 @@ function renderAdminPage(settings, isAuthed, data, section, error, notice) {
   } else if (activeSec === "exams") {
     const preselectLecId = data.preselectLectureId || "";
     const lectureOptions = `<option value="">— اختبار عام (غير مرتبط بفتح درس) —</option>` +
-      allLectures.map(l => `<option value="${esc(l.id)}" ${String(l.id) === String(preselectLecId) ? "selected" : ""}>واجب درس: ${esc(l.title)} (${esc(l.branch)})</option>`).join("");
+      allLectures.map(l => `<option value="${esc(l.id)}" ${String(l.id) === String(preselectLecId) ? "selected" : ""}>${esc(l.grade || "")} — ${esc(getLectureSubject(l))}: ${esc(l.title)}</option>`).join("");
 
     sectionHtml = `
       <div class="card">
@@ -4509,7 +4862,9 @@ function renderAdminPage(settings, isAuthed, data, section, error, notice) {
           <input type="hidden" name="questions_json" id="questionsJsonInput" />
           <div class="grid3">
             <div class="field"><label>عنوان الواجب / الاختبار *</label><input name="title" type="text" required placeholder="واجب المحاضرة الأولى" /></div>
-            <div class="field"><label>الفرع *</label><select name="branch">${BRANCHES.map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join("")}</select></div>
+            <div class="field"><label>الصف الدراسي *</label><select name="grade" id="examGradeSelect">${GRADES.map(g => `<option value="${esc(g)}">${esc(g)}</option>`).join("")}</select></div>
+            <div class="field"><label>المادة *</label><select name="subject" id="examSubjectSelect">${SUBJECTS_BY_GRADE[GRADES[0]].map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join("")}</select></div>
+            <div class="field" id="examMathBranchField" style="display:none;"><label>فرع الرياضيات *</label><select name="math_branch" id="examMathBranchSelect">${BRANCHES.map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join("")}</select></div>
             <div class="field"><label>ربط بمحاضرة (لفتح الدرس التالي)</label><select name="lecture_id">${lectureOptions}</select></div>
           </div>
 
@@ -4531,6 +4886,21 @@ function renderAdminPage(settings, isAuthed, data, section, error, notice) {
 
       <script>
         (function () {
+          const subjectsByGrade = ${safeJsonForScript(SUBJECTS_BY_GRADE)};
+          const gradeSelect = document.getElementById("examGradeSelect");
+          const subjectSelect = document.getElementById("examSubjectSelect");
+          const mathBranchField = document.getElementById("examMathBranchField");
+          function refreshExamSubjects() {
+            const subjects = subjectsByGrade[gradeSelect.value] || [];
+            subjectSelect.innerHTML = subjects.map(function (subject) {
+              return '<option value="' + subject.replace(/"/g, "&quot;") + '">' + subject + '</option>';
+            }).join("");
+            mathBranchField.style.display = subjectSelect.value === "الرياضيات" ? "" : "none";
+          }
+          gradeSelect.addEventListener("change", refreshExamSubjects);
+          subjectSelect.addEventListener("change", refreshExamSubjects);
+          refreshExamSubjects();
+
           const listEl = document.getElementById("questionsBuilderList");
           const formEl = document.getElementById("dynamicExamForm");
           const jsonInput = document.getElementById("questionsJsonInput");
@@ -4707,12 +5077,16 @@ function renderAdminPage(settings, isAuthed, data, section, error, notice) {
       parent_phone: String(item.student.parent_phone || "-"),
       governorate: String(item.student.governorate || "-"),
       grade: String(item.student.grade || ""),
-      track: String(item.student.track || ""),
       is_center_student: Boolean(item.student.is_center_student || item.student.center_code),
       center_code: String(item.student.center_code || ""),
       password_plain: String(item.student.password_plain || ""),
       password_hash: String(item.student.password_hash || ""),
       branches: Array.isArray(item.student.branches) ? item.student.branches.map(String) : [],
+      subjects: (Array.isArray(item.student.subjects) ? item.student.subjects : []).map(subject =>
+        typeof subject === "object" && subject
+          ? { grade: String(subject.grade || ""), subject: String(subject.subject || "") }
+          : { grade: String(item.student.grade || ""), subject: String(subject || "") }
+      ),
       watchedCount: item.metrics.watchedCount,
       pendingLectures: item.metrics.pendingLectures,
       solvedExamsCount: item.metrics.solvedExamsCount,
@@ -4792,6 +5166,20 @@ function renderAdminPage(settings, isAuthed, data, section, error, notice) {
               return '<label class="branch-check-pill"><input type="checkbox" name="branches" value="' + escHtml(br) + '" ' + checked + ' /><span>' + escHtml(br) + '</span></label>';
             }).join("");
 
+            const subjectsHtml = st.subjects.length
+              ? st.subjects.map(function (item) {
+                  return '<span class="pill pill-ok" style="margin-left:6px; display:inline-flex; align-items:center; gap:6px;">' +
+                    '<span>' + escHtml(item.subject) + ' — ' + escHtml(item.grade) + '</span>' +
+                    '<form method="post" action="/admin/revoke-subject" style="display:inline; margin:0;">' +
+                      '<input type="hidden" name="phone" value="' + escHtml(st.phone) + '" />' +
+                      '<input type="hidden" name="grade" value="' + escHtml(item.grade) + '" />' +
+                      '<input type="hidden" name="subject" value="' + escHtml(item.subject) + '" />' +
+                      '<button type="submit" style="border:none; background:#ef4444; color:#fff; border-radius:999px; padding:1px 7px; font-size:0.72rem; font-weight:800; cursor:pointer;">إلغاء التفعيل</button>' +
+                    '</form>' +
+                  '</span>';
+                }).join("")
+              : '<span class="pill pill-warn">لا توجد مواد مفعلة</span>';
+
             const pwdDisplay = st.password_plain ? st.password_plain : st.password_hash;
 
             profileBox.style.display = "block";
@@ -4813,7 +5201,6 @@ function renderAdminPage(settings, isAuthed, data, section, error, notice) {
                 '<div class="field"><label>رقم ولي الأمر</label><input name="parent_phone" value="' + escHtml(st.parent_phone === "-" ? "" : st.parent_phone) + '" /></div>' +
                 '<div class="field"><label>المحافظة</label><input name="governorate" value="' + escHtml(st.governorate === "-" ? "" : st.governorate) + '" /></div>' +
                 '<div class="field"><label>الصف</label><input name="grade" value="' + escHtml(st.grade) + '" required /></div>' +
-                '<div class="field"><label>الشعبة</label><input name="track" value="' + escHtml(st.track) + '" required /></div>' +
                 '<div class="field"><label>كود السنتر</label><input name="center_code" value="' + escHtml(st.center_code) + '" /></div>' +
                 '<div class="field"><label>كلمة سر جديدة (اختياري)</label><input name="password" type="password" autocomplete="new-password" minlength="4" /></div>' +
                 '<div style="grid-column:1/-1;"><button type="submit" class="btn btn-teal btn-sm">حفظ تعديل بيانات الطالب</button></div>' +
@@ -4833,6 +5220,10 @@ function renderAdminPage(settings, isAuthed, data, section, error, notice) {
                   '<div class="branch-toggle-grid">' + branchChecksHtml + '</div>' +
                   '<button type="submit" class="btn btn-teal btn-sm">تفعيل اشتراك الفروع المحددة</button>' +
                 '</form>' +
+              '</div>' +
+              '<div class="row" style="display:block;">' +
+                '<div style="font-weight:800; margin-bottom:8px;">المواد المفعلة وإلغاء تفعيلها:</div>' +
+                '<div style="display:flex; gap:6px; flex-wrap:wrap;">' + subjectsHtml + '</div>' +
               '</div>' +
               '<div style="margin-top:12px;"><div style="font-weight:900;">درجاته في الامتحانات:</div>' + subsHtml + '</div>';
 
@@ -4855,7 +5246,7 @@ function renderAdminPage(settings, isAuthed, data, section, error, notice) {
               '<div class="row">' +
                 '<div>' +
                   '<strong>' + escHtml(item.full_name) + '</strong> — <span class="muted">' + escHtml(item.phone) + '</span>' +
-                  '<div class="muted" style="font-size:0.8rem;">' + escHtml(item.grade) + ' (' + escHtml(item.track) + ') • متراكم: ' + escHtml(item.pendingLectures) + ' محاضرة • الامتحانات: ' + escHtml(item.avgPct) + '%</div>' +
+                  '<div class="muted" style="font-size:0.8rem;">' + escHtml(item.grade) + ' • متراكم: ' + escHtml(item.pendingLectures) + ' محاضرة • الامتحانات: ' + escHtml(item.avgPct) + '%</div>' +
                 '</div>' +
                 '<button type="button" class="btn btn-blue btn-sm open-st-btn" data-st-idx="' + escHtml(item.idx) + '">فتح ملف الطالب</button>' +
               '</div>'
@@ -4881,7 +5272,6 @@ function renderAdminPage(settings, isAuthed, data, section, error, notice) {
         phone: String(st.phone || ""),
         center_code: String(st.center_code || ""),
         grade: String(st.grade || ""),
-        track: String(st.track || ""),
         password_plain: String(st.password_plain || ""),
         password_hash: String(st.password_hash || "")
       }));
@@ -5185,6 +5575,16 @@ async function handleRequest(req, env) {
         headers: { "Content-Type": "application/json" }
       });
     }
+    if (!registerNameOnly && (text || imageUrl) && !isSupportChatOpen()) {
+      return new Response(JSON.stringify({
+        ok: false,
+        code: "outside_working_hours",
+        visitor_name: student?.full_name || visitorName || ""
+      }), {
+        status: 403,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
 
     const existing = (await fsGet(safeEnv, "support_threads", sid)) || {
       id: sid,
@@ -5425,6 +5825,7 @@ async function handleRequest(req, env) {
     if (student && !forceAuthMode) {
       const section = url.searchParams.get("section") || "dashboard";
       const branch = url.searchParams.get("branch") || "";
+      const subject = url.searchParams.get("subject") || "";
       const forumBranch = url.searchParams.get("forum_branch") || BRANCHES[0];
       const lectureId = url.searchParams.get("lecture_id") || "";
       const examId = url.searchParams.get("exam_id") || "";
@@ -5452,7 +5853,7 @@ async function handleRequest(req, env) {
 
       const myDrafts = drafts.filter(d => String(d.student_phone || "") === String(student.phone || ""));
       const body = renderStudentDash(settings, student, {
-        section, branch, forumBranch, lectureId, examId, error, notice,
+        section, branch, subject, forumBranch, lectureId, examId, error, notice,
         lectures, exams, submissions, drafts: myDrafts, watched, discounts, forumPosts
       });
       return htmlRes(
@@ -5483,7 +5884,6 @@ async function handleRequest(req, env) {
     const fullName = String(fd.get("full_name") || "").trim();
     const phone = normalizePhone(fd.get("phone") || "");
     const grade = String(fd.get("grade") || GRADES[0]).trim();
-    const track = String(fd.get("track") || TRACKS[0]).trim();
     const parentPhone = normalizePhone(fd.get("parent_phone") || "");
     const governorate = String(fd.get("governorate") || EGYPT_GOVERNORATES[0]).trim();
     const password = String(fd.get("password") || "");
@@ -5503,7 +5903,6 @@ async function handleRequest(req, env) {
       full_name: fullName,
       phone,
       grade,
-      track,
       parent_phone: parentPhone,
       governorate,
       password_plain: password,
@@ -5550,7 +5949,6 @@ async function handleRequest(req, env) {
     const name = String(fd.get("name") || "").trim();
     const phone = normalizePhone(fd.get("phone") || "");
     const grade = String(fd.get("grade") || GRADES[0]).trim();
-    const track = String(fd.get("track") || TRACKS[0]).trim();
     const parentPhone = normalizePhone(fd.get("parent_phone") || "");
     const governorate = String(fd.get("governorate") || EGYPT_GOVERNORATES[0]).trim();
     const password = String(fd.get("password") || "");
@@ -5582,7 +5980,6 @@ async function handleRequest(req, env) {
       full_name: name,
       phone,
       grade,
-      track,
       parent_phone: parentPhone,
       governorate,
       password_plain: password,
@@ -5594,6 +5991,7 @@ async function handleRequest(req, env) {
       locked_lectures: Array.isArray(existing.locked_lectures) ? existing.locked_lectures : [],
       active_session_id: newSid
     };
+    if (existing.track !== undefined) stDoc.track = existing.track;
     await fsSet(safeEnv, "students", phone, stDoc);
 
     const token = makeToken({ phone, sid: newSid }, secret);
@@ -5639,19 +6037,49 @@ async function handleRequest(req, env) {
     if (!found) {
       return redirectRes("/student?section=codes&error=" + encodeURIComponent("الكود غير صحيح أو مستخدم من قبل."));
     }
+    if (found.type === "branch" && !BRANCHES.includes(String(found.branch || ""))) {
+      return redirectRes("/student?section=codes&error=" + encodeURIComponent("كود الفرع غير صالح؛ تواصل مع الإدارة."));
+    }
+    if (found.type === "subject" && (
+      !SUBJECT_CODE_SUBJECTS.includes(String(found.subject || "")) ||
+      !Array.isArray(SUBJECTS_BY_GRADE[found.grade]) ||
+      !SUBJECTS_BY_GRADE[found.grade].includes(String(found.subject || ""))
+    )) {
+      return redirectRes("/student?section=codes&error=" + encodeURIComponent("كود المادة غير صالح؛ تواصل مع الإدارة."));
+    }
+    if (found.type === "subject" && String(found.grade || "") !== String(student.grade || "")) {
+      return redirectRes("/student?section=codes&error=" + encodeURIComponent("كود المادة غير مخصص لصفك الدراسي."));
+    }
+    if (found.type === "subject" && studentHasSubjectAccess(student, String(found.subject || ""))) {
+      return redirectRes("/student?section=codes&error=" + encodeURIComponent("هذه المادة مفعلة بالفعل على حسابك."));
+    }
+    if (found.type !== "center" && found.type !== "branch" && found.type !== "subject") {
+      return redirectRes("/student?section=codes&error=" + encodeURIComponent("نوع كود غير معروف؛ تواصل مع الإدارة."));
+    }
     found.used = true;
     found.used_by = student.phone;
     await fsSet(safeEnv, "codes", found.id, found);
 
     const setB = new Set(student.branches || []);
+    const activeSubjects = new Map((Array.isArray(student.subjects) ? student.subjects : []).map(item => {
+      const subject = typeof item === "string" ? item : String(item?.subject || "");
+      const grade = typeof item === "string" ? String(student.grade || "") : String(item?.grade || "");
+      return [studentSubjectAccessKey(grade, subject), { grade, subject }];
+    }));
     if (found.type === "center") {
       BRANCHES.forEach(b => setB.add(b));
       student.is_center_student = true;
       student.center_code = normalizeMoCode(found.code);
-    } else if (found.branch) {
+    } else if (found.type === "branch" && found.branch) {
       setB.add(found.branch);
+    } else if (found.type === "subject" && found.subject) {
+      activeSubjects.set(studentSubjectAccessKey(found.grade, found.subject), {
+        grade: found.grade,
+        subject: found.subject
+      });
     }
     student.branches = Array.from(setB);
+    student.subjects = Array.from(activeSubjects.values());
     await fsSet(safeEnv, "students", student.phone, student);
 
     return redirectRes("/student?section=codes&notice=" + encodeURIComponent("تم تفعيل الكود بنجاح!"));
@@ -5715,6 +6143,16 @@ async function handleRequest(req, env) {
     const actionType = String(fd.get("action_type") || "finish");
     const ex = await fsGet(safeEnv, "exams", examId);
     if (!ex) return redirectRes("/student?section=exams&error=" + encodeURIComponent("الواجب غير موجود."));
+    if (ex.grade && String(ex.grade) !== String(student.grade)) {
+      return redirectRes("/student?section=exams&error=" + encodeURIComponent("هذا الاختبار غير مخصص لصفك الدراسي."));
+    }
+    const examSubject = ex.subject || (BRANCHES.includes(String(ex.branch || "")) ? "الرياضيات" : "");
+    if (examSubject === "الرياضيات" && !new Set(student.branches || []).has(String(ex.branch || "")) && !student.is_center_student && !student.center_code) {
+      return redirectRes("/student?section=exams&error=" + encodeURIComponent("يلزم تفعيل فرع الرياضيات المرتبط بهذا الاختبار أولاً."));
+    }
+    if (SUBJECT_CODE_SUBJECTS.includes(examSubject) && !studentHasSubjectAccess(student, examSubject)) {
+      return redirectRes("/student?section=exams&error=" + encodeURIComponent("يلزم تفعيل المادة المرتبطة بهذا الاختبار أولاً."));
+    }
 
     const questions = Array.isArray(ex.questions) ? ex.questions : [];
     const answers = questions.map((_, i) => {
@@ -5764,6 +6202,8 @@ async function handleRequest(req, env) {
       student_name: student.full_name,
       exam_id: examId,
       exam_title: ex.title,
+      grade: ex.grade || student.grade,
+      subject: ex.subject || "",
       branch: ex.branch || "عام",
       score,
       wrong_count: wrongCount,
@@ -5976,18 +6416,35 @@ async function handleRequest(req, env) {
     let fd;
     try { fd = await req.formData(); } catch { return redirectRes("/admin?section=codes&error=" + encodeURIComponent("تعذر قراءة البيانات.")); }
     const type = String(fd.get("code_type") || "center");
-    const branch = String(fd.get("branch") || BRANCHES[0]);
+    const branch = String(fd.get("branch") || "").trim();
+    const subject = String(fd.get("subject") || "").trim();
+    const subjectGrade = String(fd.get("subject_grade") || "").trim();
     const count = Math.min(50, Math.max(1, Number(fd.get("count") || 1)));
+    if (!["center", "branch", "subject"].includes(type)) {
+      return redirectRes("/admin?section=codes&error=" + encodeURIComponent("نوع الكود المحدد غير صالح."));
+    }
+    if (type === "branch" && !BRANCHES.includes(branch)) {
+      return redirectRes("/admin?section=codes&error=" + encodeURIComponent("اختر فرعاً صحيحاً لإنشاء كوده."));
+    }
+    if (type === "subject" && (
+      !SUBJECT_CODE_SUBJECTS.includes(subject) ||
+      !Array.isArray(SUBJECTS_BY_GRADE[subjectGrade]) ||
+      !SUBJECTS_BY_GRADE[subjectGrade].includes(subject)
+    )) {
+      return redirectRes("/admin?section=codes&error=" + encodeURIComponent("اختر مادة صحيحة لإنشاء كودها."));
+    }
 
     for (let i = 0; i < count; i++) {
       const codeStr = type === "center"
         ? generateCenterCodeMO()
-        : ("BR-" + Math.random().toString(36).slice(2, 8).toUpperCase());
+        : ((type === "subject" ? "SUB-" : "BR-") + Math.random().toString(36).slice(2, 8).toUpperCase());
       const id = `${codeStr}_${Date.now()}_${i}`;
       await fsSet(safeEnv, "codes", id, {
         code: codeStr,
         type,
-        branch: type === "center" ? "ALL" : branch,
+        branch: type === "center" ? "ALL" : (type === "branch" ? branch : ""),
+        subject: type === "subject" ? subject : "",
+        grade: type === "subject" ? subjectGrade : "",
         used: false,
         used_by: ""
       });
@@ -6032,9 +6489,16 @@ async function handleRequest(req, env) {
     let fd;
     try { fd = await req.formData(); } catch { return redirectRes("/admin?section=lectures&error=" + encodeURIComponent("تعذر قراءة بيانات المحاضرة.")); }
     const title = String(fd.get("title") || "").trim();
-    const branch = String(fd.get("branch") || BRANCHES[0]).trim();
     const grade = String(fd.get("grade") || GRADES[0]).trim();
-    const track = String(fd.get("track") || TRACKS[0]).trim();
+    const subject = String(fd.get("subject") || "").trim();
+    const requestedBranch = String(fd.get("branch") || "").trim();
+    if (!title || !Array.isArray(SUBJECTS_BY_GRADE[grade]) || !SUBJECTS_BY_GRADE[grade].includes(subject)) {
+      return redirectRes("/admin?section=lectures&error=" + encodeURIComponent("أدخل عنواناً صالحاً واختر مادة متاحة للصف المحدد."));
+    }
+    if (subject === "الرياضيات" && !BRANCHES.includes(requestedBranch)) {
+      return redirectRes("/admin?section=lectures&error=" + encodeURIComponent("اختر فرعاً صحيحاً لمادة الرياضيات."));
+    }
+    const branch = subject === "الرياضيات" ? requestedBranch : "عام";
     const orderNum = Math.max(1, Number(fd.get("order_num") || 1));
     const videoUrl = String(fd.get("video_url") || "").trim();
     const customJsonRaw = String(fd.get("custom_items_json") || "[]");
@@ -6049,9 +6513,9 @@ async function handleRequest(req, env) {
       const id = "lec_" + Date.now();
       await fsSet(safeEnv, "lectures", id, {
         title,
+        subject,
         branch,
         grade,
-        track,
         order_num: orderNum,
         video_url: videoUrl,
         custom_items: customItems
@@ -6072,8 +6536,23 @@ async function handleRequest(req, env) {
     let fd;
     try { fd = await req.formData(); } catch { return redirectRes("/admin?section=exams&error=" + encodeURIComponent("تعذر قراءة بيانات الاختبار.")); }
     const title = String(fd.get("title") || "").trim();
-    const branch = String(fd.get("branch") || BRANCHES[0]).trim();
     const lectureId = String(fd.get("lecture_id") || "").trim();
+    const linkedLecture = lectureId ? await fsGet(safeEnv, "lectures", lectureId) : null;
+    if (lectureId && !linkedLecture) {
+      return redirectRes("/admin?section=exams&error=" + encodeURIComponent("المحاضرة المرتبطة بالاختبار غير موجودة."));
+    }
+    const grade = linkedLecture ? String(linkedLecture.grade || "") : String(fd.get("grade") || "").trim();
+    const subject = linkedLecture ? getLectureSubject(linkedLecture) : String(fd.get("subject") || "").trim();
+    if (!title || !Array.isArray(SUBJECTS_BY_GRADE[grade]) || !SUBJECTS_BY_GRADE[grade].includes(subject)) {
+      return redirectRes("/admin?section=exams&error=" + encodeURIComponent("أدخل عنواناً صالحاً واختر مادة متاحة للصف المحدد."));
+    }
+    const requestedMathBranch = String(fd.get("math_branch") || "").trim();
+    if (!linkedLecture && subject === "الرياضيات" && !BRANCHES.includes(requestedMathBranch)) {
+      return redirectRes("/admin?section=exams&error=" + encodeURIComponent("اختر فرعاً صحيحاً للاختبار العام في الرياضيات."));
+    }
+    const branch = linkedLecture
+      ? String(linkedLecture.branch || subject)
+      : (subject === "الرياضيات" ? requestedMathBranch : subject);
     const questionsJson = String(fd.get("questions_json") || "[]");
 
     let questions = [];
@@ -6082,14 +6561,18 @@ async function handleRequest(req, env) {
       if (Array.isArray(parsed)) questions = parsed;
     } catch {}
 
-    if (title && questions.length > 0) {
+    if (questions.length > 0) {
       const id = "ex_" + Date.now();
       await fsSet(safeEnv, "exams", id, {
         title,
+        grade,
+        subject,
         branch,
         lecture_id: lectureId,
         questions
       });
+    } else {
+      return redirectRes("/admin?section=exams&error=" + encodeURIComponent("أضف سؤالاً واحداً على الأقل قبل حفظ الاختبار."));
     }
     return redirectRes("/admin?section=exams&notice=" + encodeURIComponent("تم حفظ ونشر الواجب / الاختبار بنجاح."));
   }
@@ -6126,6 +6609,24 @@ async function handleRequest(req, env) {
       await fsSet(safeEnv, "students", phone, st);
     }
     return redirectRes("/admin?section=students&notice=" + encodeURIComponent(`تم إلغاء تفعيل فرع (${branchToRemove}) عن الطالب.`));
+  }
+
+  if (path === "/admin/revoke-subject" && req.method === "POST") {
+    let fd;
+    try { fd = await req.formData(); } catch { return redirectRes("/admin?section=students&error=" + encodeURIComponent("تعذر قراءة بيانات المادة.")); }
+    const phone = normalizePhone(fd.get("phone") || "");
+    const grade = String(fd.get("grade") || "").trim();
+    const subject = String(fd.get("subject") || "").trim();
+    const st = await fsGet(safeEnv, "students", phone);
+    if (st && grade && subject) {
+      st.subjects = (Array.isArray(st.subjects) ? st.subjects : []).filter(item =>
+        typeof item === "string"
+          ? !(String(st.grade || "") === grade && item === subject)
+          : !(String(item?.grade || "") === grade && String(item?.subject || "") === subject)
+      );
+      await fsSet(safeEnv, "students", phone, st);
+    }
+    return redirectRes("/admin?section=students&notice=" + encodeURIComponent(`تم إلغاء تفعيل مادة (${subject}) عن الطالب.`));
   }
 
   if (path === "/admin/delete-student" && req.method === "POST") {
@@ -6171,7 +6672,6 @@ async function handleRequest(req, env) {
     student.parent_phone = parentPhone;
     student.governorate = String(fd.get("governorate") || "").trim();
     student.grade = String(fd.get("grade") || GRADES[0]).trim();
-    student.track = String(fd.get("track") || TRACKS[0]).trim();
     student.center_code = centerCode;
     student.is_center_student = Boolean(centerCode);
     if (newPassword) {

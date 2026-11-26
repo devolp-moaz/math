@@ -36,7 +36,7 @@ const EGYPT_GOVERNORATES = [
   "قنا",
   "شمال سيناء"
 ];
-const TEACHER_MAIN_PHOTO = "/teacher-photo.jpeg";
+const TEACHER_MAIN_PHOTO = "/teacher-photo.svg";
 const DEFAULT_ADMIN_EMAIL = "mohmed@mr.com";
 const DEFAULT_ADMIN_PASS = "admin123456";
 const PLATFORM_NAME = "منصة الرياضيات";

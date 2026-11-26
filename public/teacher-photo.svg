@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="760" viewBox="0 0 640 760" role="img" aria-labelledby="title description">
+  <title id="title">مدرس الرياضيات</title>
+  <desc id="description">رسم توضيحي مؤقت لمدرس رياضيات</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#541020"/>
+      <stop offset="1" stop-color="#a63d56"/>
+    </linearGradient>
+    <linearGradient id="shirt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset="1" stop-color="#f3e8eb"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="760" rx="40" fill="url(#background)"/>
+  <circle cx="530" cy="125" r="95" fill="#fff" opacity=".08"/>
+  <circle cx="110" cy="630" r="145" fill="#fff" opacity=".06"/>
+  <g fill="#fff" opacity=".75" font-family="sans-serif" font-weight="700">
+    <text x="84" y="188" font-size="54">x² + y²</text>
+    <text x="420" y="316" font-size="46">π</text>
+    <text x="94" y="488" font-size="46">∑</text>
+  </g>
+  <circle cx="320" cy="300" r="102" fill="#e8b6a2"/>
+  <path d="M218 292c5-84 51-132 107-132 69 0 105 53 103 130-37-22-68-51-91-82-25 43-68 70-119 84Z" fill="#2b2023"/>
+  <path d="M166 690c8-135 63-219 154-219s146 84 154 219Z" fill="url(#shirt)"/>
+  <path d="m272 473 48 78 48-78-48-32Z" fill="#7a1830"/>
+  <path d="m320 551 27 139h-54Z" fill="#541020"/>
+  <rect x="239" y="276" width="68" height="46" rx="18" fill="none" stroke="#542f35" stroke-width="9"/>
+  <rect x="333" y="276" width="68" height="46" rx="18" fill="none" stroke="#542f35" stroke-width="9"/>
+  <path d="M307 294h26" stroke="#542f35" stroke-width="8"/>
+  <path d="M296 366c15 13 33 13 48 0" fill="none" stroke="#8a493e" stroke-linecap="round" stroke-width="8"/>
+</svg>

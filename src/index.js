@@ -516,44 +516,52 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Aref+Ruqaa:wght@700&display=swap" />
   <style>
     :root {
-      --bg: #f3f6fb;
-      --surface: #ffffff;
-      --surface-soft: #edf3f9;
-      --txt: #132238;
-      --muted: #667894;
-      --accent: #1d4ed8;
-      --accent-rgb: 29, 78, 216;
-      --accent-dark: #123b9a;
-      --accent-2: #0e7490;
-      --accent-2-rgb: 14, 116, 144;
+      --bg: #edf7f4;
+      --surface: #fffdf8;
+      --surface-soft: #e4f1ec;
+      --txt: #18343a;
+      --muted: #60777a;
+      --accent: #087d78;
+      --accent-rgb: 8, 125, 120;
+      --accent-dark: #075b58;
+      --accent-2: #e6a84f;
+      --accent-2-rgb: 230, 168, 79;
+      --gold: #e6a84f;
+      --gold-rgb: 230, 168, 79;
       --err: #dc2626;
       --bdr: rgba(var(--accent-rgb), 0.16);
-      --thuluth-color: rgba(var(--accent-rgb), 0.035);
-      --shadow-sm: 0 8px 22px rgba(30, 55, 90, 0.07);
-      --shadow-md: 0 18px 46px rgba(30, 55, 90, 0.10);
-      --shadow-lg: 0 28px 70px rgba(30, 55, 90, 0.16);
+      --thuluth-color: rgba(var(--accent-rgb), 0.045);
+      --shadow-sm: 0 8px 22px rgba(45, 93, 91, 0.08);
+      --shadow-md: 0 18px 46px rgba(45, 93, 91, 0.12);
+      --shadow-lg: 0 28px 70px rgba(45, 93, 91, 0.16);
     }
     body.dark {
-      --bg: #070a12;
-      --surface: #0d1320;
-      --surface-soft: #121a2a;
-      --txt: #f7f9ff;
-      --muted: #a1abc0;
-      --accent: #60a5fa;
-      --accent-rgb: 96, 165, 250;
-      --accent-dark: #1d4ed8;
-      --accent-2: #22d3ee;
-      --accent-2-rgb: 34, 211, 238;
+      --bg: #101a24;
+      --surface: #17232d;
+      --surface-soft: #1d3038;
+      --txt: #eef6f4;
+      --muted: #abb9b7;
+      --accent: #65bfb1;
+      --accent-rgb: 101, 191, 177;
+      --accent-dark: #4da698;
+      --accent-2: #e7be72;
+      --accent-2-rgb: 231, 190, 114;
+      --gold: #e7be72;
+      --gold-rgb: 231, 190, 114;
       --err: #f87171;
-      --bdr: rgba(var(--accent-rgb), 0.18);
-      --thuluth-color: rgba(var(--accent-rgb), 0.04);
+      --bdr: rgba(var(--accent-rgb), 0.14);
+      --thuluth-color: rgba(var(--accent-rgb), 0.09);
       --shadow-sm: 0 6px 18px rgba(0, 0, 0, 0.28);
       --shadow-md: 0 18px 44px rgba(0, 0, 0, 0.38);
       --shadow-lg: 0 28px 65px rgba(0, 0, 0, 0.52);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
     body {
-      background: var(--bg);
+      background:
+        radial-gradient(ellipse at 12% 18%, rgba(255,255,255,0.96) 0 5%, transparent 16%),
+        radial-gradient(ellipse at 82% 12%, rgba(255,248,208,0.78) 0 7%, transparent 20%),
+        radial-gradient(circle at 72% 78%, rgba(78,190,178,0.14), transparent 22rem),
+        linear-gradient(135deg, #edf8f5 0%, #f8fbf5 48%, #eaf4ef 100%);
       color: var(--txt);
       min-height: 100vh;
       line-height: 1.72;
@@ -564,11 +572,11 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
     body.dark {
       background:
         radial-gradient(circle at 82% 8%, rgba(var(--accent-2-rgb), 0.10), transparent 24rem),
-        radial-gradient(circle at 12% 55%, rgba(var(--accent-2-rgb), 0.12), transparent 26rem),
+        radial-gradient(circle at 12% 55%, rgba(var(--accent-rgb), 0.09), transparent 26rem),
         var(--bg);
     }
     body.dark .topbar {
-      background: rgba(12, 20, 36, 0.86);
+      background: rgba(16, 26, 36, 0.90);
       border-bottom-color: rgba(var(--accent-rgb), 0.16);
     }
     body.dark .card,
@@ -590,7 +598,7 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
     body.dark input,
     body.dark select,
     body.dark textarea {
-      background: #09111f;
+      background: #101a24;
       color: var(--txt);
       border-color: rgba(var(--accent-rgb), 0.18);
     }
@@ -614,10 +622,10 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
       color: #ffffff;
     }
     body.dark ::-webkit-scrollbar { width: 10px; height: 10px; }
-    body.dark ::-webkit-scrollbar-track { background: #060b16; }
+    body.dark ::-webkit-scrollbar-track { background: #101a24; }
     body.dark ::-webkit-scrollbar-thumb {
       background: linear-gradient(180deg, var(--accent-dark), var(--accent-2));
-      border: 2px solid #060b16;
+      border: 2px solid #101a24;
       border-radius: 999px;
     }
     body.dark .topbar {
@@ -626,8 +634,8 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
     body.dark .landing-hero-card {
       background:
         radial-gradient(circle at 88% 12%, rgba(var(--accent-2-rgb), 0.16), transparent 30%),
-        radial-gradient(circle at 8% 90%, rgba(var(--accent-2-rgb), 0.14), transparent 28%),
-        linear-gradient(145deg, #0d1320 0%, #121a2a 100%);
+        radial-gradient(circle at 8% 90%, rgba(var(--accent-rgb), 0.12), transparent 28%),
+        linear-gradient(145deg, #17232d 0%, #1d3038 100%);
     }
     body.dark .hero-teacher-frame {
       box-shadow:
@@ -709,7 +717,7 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
       backdrop-filter: blur(24px) saturate(140%);
       -webkit-backdrop-filter: blur(24px) saturate(140%);
       border-bottom: 1px solid var(--bdr);
-      padding: 12px clamp(16px, 3vw, 38px);
+      padding: 10px clamp(16px, 3vw, 38px);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -722,10 +730,13 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
     }
     .brand-box { display: flex; align-items: center; gap: 13px; }
     .brand-logo-badge {
-      width: 50px; height: 50px; border-radius: 15px;
-      background: linear-gradient(135deg, var(--accent-dark) 0%, var(--accent-2) 100%);
+      width: 52px; height: 52px; border-radius: 16px;
+      background:
+        linear-gradient(145deg, rgba(255,255,255,0.16), transparent 55%),
+        linear-gradient(135deg, var(--accent-dark) 0%, var(--accent) 65%, var(--accent-2) 100%);
       color: #fff; font-weight: 900; display: grid; place-items: center; font-size: 0.88rem;
-      box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.28);
+      border: 1px solid rgba(255,255,255,0.34);
+      box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.28), inset 0 1px 0 rgba(255,255,255,0.28);
       letter-spacing: -0.5px;
     }
 
@@ -820,7 +831,7 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
       width: 48px;
       height: 26px;
       border-radius: 999px;
-      background: #9bb4d8;
+      background: #a9c5bd;
       transition: background-color 0.25s ease;
       display: inline-block;
     }
@@ -833,7 +844,7 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
       height: 20px;
       border-radius: 50%;
       background: #ffffff;
-      box-shadow: 0 2px 6px rgba(13, 71, 161, 0.25);
+      box-shadow: 0 2px 6px rgba(var(--accent-rgb), 0.25);
       transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
     }
     .mode-switch input:checked + .mode-track { background: var(--accent); }
@@ -865,11 +876,11 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
     .btn-blue:hover { box-shadow: 0 13px 32px rgba(var(--accent-rgb), 0.38); }
 
     .btn-teal {
-      background: linear-gradient(135deg, #16a085 0%, #37c6a4 100%);
+      background: linear-gradient(135deg, var(--accent-dark) 0%, var(--accent) 100%);
       color: #fff;
-      box-shadow: 0 7px 20px rgba(25, 118, 210, 0.28);
+      box-shadow: 0 7px 20px rgba(var(--accent-rgb), 0.28);
     }
-    .btn-teal:hover { box-shadow: 0 11px 26px rgba(25, 118, 210, 0.4); }
+    .btn-teal:hover { box-shadow: 0 11px 26px rgba(var(--accent-rgb), 0.4); }
 
     .btn-gold {
       background: linear-gradient(135deg, var(--accent-dark), var(--accent-2));
@@ -913,8 +924,8 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
       transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
     }
     .card { padding: 24px; margin-bottom: 18px; position: relative; }
-    body.dark .card,
-    body.dark .landing-hero-card {
+    .card,
+    .landing-hero-card {
       animation: panelEnter 0.55s cubic-bezier(.2,.75,.25,1) both;
     }
     @keyframes panelEnter {
@@ -1079,7 +1090,7 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
       background: linear-gradient(135deg, var(--accent-dark), var(--accent-2));
       color: #ffffff; font-weight: 800; font-size: 0.85rem;
       text-decoration: none; border: none; cursor: pointer;
-      box-shadow: 0 5px 14px rgba(13, 71, 161, 0.28);
+      box-shadow: 0 5px 14px rgba(var(--accent-rgb), 0.28);
       transition: transform 0.15s ease, opacity 0.15s ease;
     }
     .jakh-action-btn:hover { transform: translateY(-1px); opacity: 0.96; }
@@ -1186,7 +1197,7 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
     }
     .support-fab-btn:hover {
       transform: translateY(-2px) scale(1.03);
-      box-shadow: 0 18px 38px rgba(13, 71, 161, 0.52);
+      box-shadow: 0 18px 38px rgba(var(--accent-rgb), 0.42);
     }
     .support-fab-icon {
       width: 35px;
@@ -1513,15 +1524,27 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
     .landing-hero-box { max-width: 1480px; margin: 24px auto 0; padding: 0 16px; }
     .landing-hero-card {
       position: relative; overflow: hidden; padding: 38px;
-      display: grid; grid-template-columns: 370px 1fr; gap: 42px; align-items: center;
-      min-height: 510px;
+      display: grid; grid-template-columns: minmax(300px, 390px) 1fr; gap: 48px; align-items: center;
+      min-height: 530px;
       background:
-        radial-gradient(circle at 85% 15%, rgba(var(--accent-2-rgb), 0.16), transparent 28%),
+        linear-gradient(135deg, rgba(var(--gold-rgb), 0.07), transparent 18%),
+        radial-gradient(circle at 88% 12%, rgba(var(--accent-2-rgb), 0.16), transparent 30%),
         linear-gradient(135deg, var(--surface) 0%, var(--surface-soft) 100%);
+      border-color: rgba(var(--accent-rgb), 0.20);
+      box-shadow: 0 28px 80px rgba(45,93,91,0.14);
     }
     .landing-hero-card::before {
-      content: ""; position: absolute; width: 260px; height: 260px; border-radius: 50%;
-      left: -150px; bottom: -170px; border: 36px solid rgba(var(--accent-rgb), 0.08);
+      content: ""; position: absolute; width: 320px; height: 320px; border-radius: 50%;
+      left: -210px; bottom: -210px; border: 46px solid rgba(var(--accent-rgb), 0.075);
+    }
+    .landing-hero-card::after {
+      content: ""; position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(var(--accent-rgb), 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(var(--accent-rgb), 0.035) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: linear-gradient(90deg, transparent 0%, transparent 58%, #000 100%);
+      pointer-events: none;
     }
     @media (max-width: 860px) {
       .landing-hero-card { grid-template-columns: 1fr; min-height: auto; padding: 22px; gap: 20px; }
@@ -1529,27 +1552,52 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
     }
     .hero-teacher-frame {
       position: relative; z-index: 1;
-      background: linear-gradient(155deg, rgba(var(--accent-rgb), 0.16), rgba(var(--accent-2-rgb), 0.20));
-      border-radius: 28px; padding: 10px; display: flex; justify-content: center; align-items: center;
-      min-height: 390px; border: 1.5px solid var(--bdr);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.7), var(--shadow-sm);
+      background:
+        radial-gradient(circle at 50% 100%, rgba(var(--gold-rgb), 0.20), transparent 42%),
+        linear-gradient(155deg, rgba(var(--accent-rgb), 0.15), rgba(var(--accent-2-rgb), 0.20));
+      border-radius: 32px; padding: 12px; display: flex; justify-content: center; align-items: center;
+      min-height: 410px; border: 1.5px solid rgba(var(--accent-rgb), 0.24);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.75), 0 24px 58px rgba(var(--accent-rgb), 0.16);
     }
     .hero-teacher-frame img {
       width: 100%; max-height: 390px; object-fit: contain; object-position: center bottom;
-      border-radius: 20px; display: block;
+      border-radius: 23px; display: block;
+      filter: drop-shadow(0 18px 18px rgba(18,55,53,0.14));
+      transform: perspective(900px) rotateY(var(--teacher-tilt-x, 0deg)) rotateX(var(--teacher-tilt-y, 0deg));
+      transition: transform 0.18s ease-out;
+    }
+    .hero-teacher-badge {
+      position: absolute; left: 18px; bottom: 18px; z-index: 3;
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 8px 12px; border-radius: 999px;
+      background: rgba(255,255,255,0.92); color: var(--accent-dark);
+      border: 1px solid rgba(var(--gold-rgb), 0.55);
+      box-shadow: 0 12px 30px rgba(18,55,53,0.18);
+      backdrop-filter: blur(10px);
+      font-size: 0.78rem; font-weight: 900;
     }
     .hero-copy { position: relative; z-index: 1; }
     .hero-eyebrow {
       display: inline-flex; align-items: center; gap: 8px; border-radius: 999px;
-      padding: 7px 13px; background: rgba(var(--accent-rgb), 0.08); color: var(--accent);
-      border: 1px solid var(--bdr); font-weight: 900; font-size: 0.84rem;
+      padding: 7px 13px; background: rgba(var(--gold-rgb), 0.10); color: var(--accent);
+      border: 1px solid rgba(var(--gold-rgb), 0.34); font-weight: 900; font-size: 0.84rem;
     }
-    .hero-title { font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1.25; font-weight: 900; margin-top: 14px; color: var(--txt); }
-    .hero-title span { color: var(--accent); }
+    .hero-title { font-size: clamp(2.1rem, 4.2vw, 3.55rem); line-height: 1.18; font-weight: 900; margin-top: 16px; color: var(--txt); letter-spacing: -1px; }
+    .hero-title span {
+      color: var(--accent);
+      background: linear-gradient(135deg, var(--accent-dark), var(--accent-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
     .hero-subtitle { margin-top: 10px; font-size: clamp(1.05rem, 2vw, 1.28rem); color: var(--accent-2); font-weight: 900; }
     .hero-description { max-width: 760px; margin-top: 14px; color: var(--muted); line-height: 1.95; font-size: 0.98rem; }
     .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 22px; }
     .hero-actions .btn { min-width: 190px; padding: 12px 18px; justify-content: center; }
+    .hero-actions .btn-blue {
+      background: linear-gradient(135deg, var(--accent-dark), var(--accent));
+      box-shadow: 0 14px 34px rgba(var(--accent-rgb), 0.24);
+    }
     .hero-trust-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 18px; margin-top: 18px; }
     .hero-trust-item { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 0.82rem; font-weight: 800; }
     .hero-trust-icon {
@@ -1570,7 +1618,10 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
     .landing-feature:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: var(--shadow-md); }
     .landing-feature-icon {
       flex: 0 0 44px; width: 44px; height: 44px; border-radius: 14px;
-      display: grid; place-items: center; background: var(--surface-soft); font-size: 1.25rem;
+      display: grid; place-items: center;
+      background: linear-gradient(145deg, rgba(var(--accent-rgb), 0.12), rgba(var(--gold-rgb), 0.10));
+      border: 1px solid var(--bdr);
+      font-size: 1.25rem;
     }
     .landing-feature strong { display: block; color: var(--accent); font-size: 0.98rem; }
     .landing-feature p { margin-top: 3px; color: var(--muted); font-size: 0.82rem; line-height: 1.75; }
@@ -1581,7 +1632,10 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
     @media (max-width: 760px) { .landing-stats { grid-template-columns: repeat(2, 1fr); } }
     .landing-stat {
       text-align: center; padding: 20px 12px; border-radius: 18px;
-      background: var(--surface); border: 1.5px solid var(--bdr); box-shadow: var(--shadow-sm);
+      background:
+        linear-gradient(145deg, rgba(var(--gold-rgb), 0.04), transparent 48%),
+        var(--surface);
+      border: 1.5px solid var(--bdr); box-shadow: var(--shadow-sm);
     }
     .landing-stat strong {
       display: block; color: var(--accent); font-size: 1.55rem; line-height: 1.2;
@@ -1600,6 +1654,10 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
       border: 1.5px solid var(--bdr); background: var(--surface); box-shadow: var(--shadow-sm);
       position: relative; overflow: hidden;
     }
+    .journey-step::after {
+      content: ""; position: absolute; width: 110px; height: 110px; border-radius: 50%;
+      left: -70px; bottom: -72px; background: rgba(var(--gold-rgb), 0.08);
+    }
     .journey-number {
       width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center;
       background: linear-gradient(135deg, var(--accent-dark), var(--accent-2));
@@ -1612,8 +1670,10 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
     }
     .landing-cta-box {
       border-radius: 24px; padding: 30px;
-      background: linear-gradient(135deg, var(--accent-dark), var(--accent-2));
-      color: #fff; text-align: center; box-shadow: var(--shadow-md);
+      background:
+        radial-gradient(circle at 18% 20%, rgba(var(--gold-rgb), 0.18), transparent 18rem),
+        linear-gradient(135deg, var(--accent-dark), var(--accent) 55%, var(--accent-2));
+      color: #fff; text-align: center; box-shadow: 0 24px 60px rgba(var(--accent-rgb), 0.22);
     }
     .landing-cta-box h2 { font-size: clamp(1.35rem, 3vw, 2rem); font-weight: 900; }
     .landing-cta-box p { margin: 7px auto 18px; max-width: 650px; opacity: 0.92; font-size: 0.92rem; }
@@ -1678,7 +1738,7 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
       margin-top: 40px;
       background:
         radial-gradient(circle at 82% 0%, rgba(var(--accent-2-rgb), 0.14), transparent 18rem),
-        linear-gradient(135deg, #090d18, #0d1320);
+        linear-gradient(135deg, #102b2b, #18343a);
       color: #ffffff;
       border-top: 1px solid rgba(var(--accent-rgb), 0.18);
       padding: 36px 24px 26px;
@@ -1706,7 +1766,7 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
       font-size: 0.94rem;
       transition: transform 0.16s ease, color 0.16s ease;
     }
-    .social-row-link:hover { transform: translateX(-3px); color: #90caf9; }
+    .social-row-link:hover { transform: translateX(-3px); color: #e7be72; }
     .social-row-link.disabled-link { opacity: 0.45; pointer-events: none; }
     .social-sq-icon {
       width: 24px;
@@ -1731,13 +1791,13 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
       font-size: 1rem;
       transition: color 0.16s ease;
     }
-    .footer-page-link:hover { color: #90caf9; }
+    .footer-page-link:hover { color: #e7be72; }
 
     .footer-brand-box { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
     @media (max-width: 780px) { .footer-brand-box { align-items: center; } }
-    .footer-brand-emblem { font-size: 2rem; font-weight: 900; color: #90caf9; letter-spacing: 0.5px; }
-    .footer-copyright-line { font-size: 0.9rem; font-weight: 800; color: #dbeafe; }
-    .footer-dev-line { font-size: 0.86rem; font-weight: 800; color: #64b5f6; direction: ltr; }
+    .footer-brand-emblem { font-size: 2rem; font-weight: 900; color: #e7be72; letter-spacing: 0.5px; }
+    .footer-copyright-line { font-size: 0.9rem; font-weight: 800; color: #e3efeb; }
+    .footer-dev-line { font-size: 0.86rem; font-weight: 800; color: #65bfb1; direction: ltr; }
   </style>
 </head>
 <body>
@@ -1918,7 +1978,7 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
       const toggleEl = document.getElementById("themeToggle");
       const labelEl = document.getElementById("themeLabelText");
       const savedTheme = localStorage.getItem("nb_py_theme");
-      const isDark = savedTheme === null || savedTheme === "dark";
+      const isDark = savedTheme === "dark";
       if (isDark) {
         document.body.classList.add("dark");
         if (toggleEl) toggleEl.checked = true;
@@ -1928,6 +1988,43 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
         const dark = document.body.classList.toggle("dark", toggleEl.checked);
         localStorage.setItem("nb_py_theme", dark ? "dark" : "light");
         if (labelEl) labelEl.textContent = dark ? "ليلي" : "نهار";
+      });
+    })();
+
+    (function setupTeacherMotion() {
+      const frame = document.querySelector(".hero-teacher-frame");
+      const image = frame?.querySelector("img");
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+      const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+      if (!frame || !image || reducedMotion.matches || !finePointer.matches) return;
+
+      let frameRect = null;
+      let animationFrame = 0;
+      let pointerX = 0;
+      let pointerY = 0;
+
+      frame.addEventListener("pointerenter", function () {
+        frameRect = frame.getBoundingClientRect();
+      });
+      frame.addEventListener("pointermove", function (event) {
+        pointerX = event.clientX;
+        pointerY = event.clientY;
+        if (animationFrame) return;
+        animationFrame = window.requestAnimationFrame(function () {
+          animationFrame = 0;
+          if (!frameRect) return;
+          const x = (pointerX - frameRect.left) / frameRect.width - 0.5;
+          const y = (pointerY - frameRect.top) / frameRect.height - 0.5;
+          image.style.setProperty("--teacher-tilt-x", (x * 8).toFixed(2) + "deg");
+          image.style.setProperty("--teacher-tilt-y", (-y * 6).toFixed(2) + "deg");
+        });
+      }, { passive: true });
+      frame.addEventListener("pointerleave", function () {
+        frameRect = null;
+        if (animationFrame) window.cancelAnimationFrame(animationFrame);
+        animationFrame = 0;
+        image.style.setProperty("--teacher-tilt-x", "0deg");
+        image.style.setProperty("--teacher-tilt-y", "0deg");
       });
     })();
 
@@ -1980,18 +2077,33 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
       const isLoggedStaff = ${isStaff ? "true" : "false"};
       if (!isLoggedStudent && !isLoggedStaff) return;
 
+      let sessionCheckTimer = 0;
+      let sessionCheckInFlight = false;
       async function checkSingleStudentSession() {
+        if (document.visibilityState !== "visible" || sessionCheckInFlight) return;
+        sessionCheckInFlight = true;
         try {
           const res = await fetch("/api/session/check");
-          if (!res.ok) return;
-          const data = await res.json();
-          if (data.kicked) {
-            window.location.href = data.redirect || "/student?tab=login";
+          if (res.ok) {
+            const data = await res.json();
+            if (data.kicked) {
+              window.location.href = data.redirect || "/student?tab=login";
+            }
           }
         } catch {}
+        finally {
+          sessionCheckInFlight = false;
+          if (document.visibilityState === "visible") {
+            sessionCheckTimer = window.setTimeout(checkSingleStudentSession, 15000);
+          }
+        }
       }
+
+      document.addEventListener("visibilitychange", function () {
+        window.clearTimeout(sessionCheckTimer);
+        if (document.visibilityState === "visible") checkSingleStudentSession();
+      });
       checkSingleStudentSession();
-      setInterval(checkSingleStudentSession, 1000);
     })();
 
     (function initSupportAndBellNotifications() {
@@ -2042,6 +2154,8 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
       }
 
       const serverAcademicItems = ${safeJsonForScript(academicUnreadItems)};
+      let threadSyncTimer = 0;
+      let threadSyncInFlight = false;
 
       function escLocal(s) {
         return String(s ?? "")
@@ -2218,26 +2332,37 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
       }
 
       async function syncThread() {
+        window.clearTimeout(threadSyncTimer);
+        if (document.visibilityState !== "visible" || threadSyncInFlight) return;
+        threadSyncInFlight = true;
         try {
           const res = await fetch("/api/support/thread?session_id=" + encodeURIComponent(sessionId));
-          if (!res.ok) return;
-          const data = await res.json();
-          if (data.visitor_name && !visitorName) {
-            visitorName = data.visitor_name;
-            localStorage.setItem("jakh_sup_name", visitorName);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.visitor_name && !visitorName) {
+              visitorName = data.visitor_name;
+              localStorage.setItem("jakh_sup_name", visitorName);
+            }
+            if (Array.isArray(data.read_admin_ids)) {
+              data.read_admin_ids.forEach(function (id) {
+                if (!readAdminIds.includes(id)) readAdminIds.push(id);
+              });
+              localStorage.setItem("jakh_sup_read_ids", JSON.stringify(readAdminIds));
+            }
+            messages = Array.isArray(data.messages) ? data.messages : [];
+            if (winEl && winEl.classList.contains("open")) {
+              markAllCurrentAdminMessagesAsRead();
+            }
+            renderChatMessages();
           }
-          if (Array.isArray(data.read_admin_ids)) {
-            data.read_admin_ids.forEach(function (id) {
-              if (!readAdminIds.includes(id)) readAdminIds.push(id);
-            });
-            localStorage.setItem("jakh_sup_read_ids", JSON.stringify(readAdminIds));
-          }
-          messages = Array.isArray(data.messages) ? data.messages : [];
-          if (winEl && winEl.classList.contains("open")) {
-            markAllCurrentAdminMessagesAsRead();
-          }
-          renderChatMessages();
         } catch {}
+        finally {
+          threadSyncInFlight = false;
+          if (document.visibilityState === "visible") {
+            const delay = winEl && winEl.classList.contains("open") ? 7000 : 30000;
+            threadSyncTimer = window.setTimeout(syncThread, delay);
+          }
+        }
       }
 
       fabBtn?.addEventListener("click", function () {
@@ -2248,12 +2373,23 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
           markAllCurrentAdminMessagesAsRead();
         }
         renderChatMessages();
-        if (willOpen) syncThread();
+        if (willOpen) {
+          syncThread();
+        } else {
+          window.clearTimeout(threadSyncTimer);
+          if (document.visibilityState === "visible") {
+            threadSyncTimer = window.setTimeout(syncThread, 30000);
+          }
+        }
       });
 
       closeBtn?.addEventListener("click", function () {
         winEl?.classList.remove("open");
         refreshAllBells();
+        window.clearTimeout(threadSyncTimer);
+        if (document.visibilityState === "visible") {
+          threadSyncTimer = window.setTimeout(syncThread, 30000);
+        }
       });
 
       async function confirmVisitorName() {
@@ -2361,8 +2497,11 @@ function renderLayout(title, settings, student, isStaff, bodyHtml, options = {})
       });
 
       renderChatMessages();
+      document.addEventListener("visibilitychange", function () {
+        window.clearTimeout(threadSyncTimer);
+        if (document.visibilityState === "visible") syncThread();
+      });
       syncThread();
-      setInterval(syncThread, 7000);
     })();
   </script>
 </body>
@@ -2375,6 +2514,7 @@ function renderLanding(settings) {
   <div class="landing-hero-card">
     <div class="hero-teacher-frame">
       <img src="${esc(settings.teacher_image)}" alt="الأستاذ" onerror="this.style.display='none';" />
+      <span class="hero-teacher-badge"><span>◆</span> ${TEACHER_EXPERIENCE_YEARS} عاما من الخبرة</span>
     </div>
     <div class="hero-copy">
       <span class="hero-eyebrow"><span>★</span> مدرس الرياضيات</span>
@@ -3745,24 +3885,39 @@ function renderTeamStandalonePage(teamSession, forumPosts, lectures, students, t
       });
 
       let lastAlertKey = localStorage.getItem("nb_team_last_alert") || "";
+      let alertPollTimer = 0;
+      let alertPollInFlight = false;
       async function pollTeamAlerts() {
+        if (document.visibilityState !== "visible" || alertPollInFlight) return;
+        alertPollInFlight = true;
         try {
           const res = await fetch("/api/staff/alerts");
-          if (!res.ok) return;
-          const d = await res.json();
-          if (d.latest_key && d.latest_key !== lastAlertKey) {
-            lastAlertKey = d.latest_key;
-            localStorage.setItem("nb_team_last_alert", lastAlertKey);
-            if ("Notification" in window && Notification.permission === "granted") {
-              new Notification(d.title || "إشعار المنتدى", {
-                body: d.body || ""
-              });
+          if (res.ok) {
+            const d = await res.json();
+            if (d.latest_key && d.latest_key !== lastAlertKey) {
+              lastAlertKey = d.latest_key;
+              localStorage.setItem("nb_team_last_alert", lastAlertKey);
+              if ("Notification" in window && Notification.permission === "granted") {
+                new Notification(d.title || "إشعار المنتدى", {
+                  body: d.body || ""
+                });
+              }
             }
           }
         } catch {}
+        finally {
+          alertPollInFlight = false;
+          if (document.visibilityState === "visible") {
+            alertPollTimer = window.setTimeout(pollTeamAlerts, 10000);
+          }
+        }
       }
+
+      document.addEventListener("visibilitychange", function () {
+        window.clearTimeout(alertPollTimer);
+        if (document.visibilityState === "visible") pollTeamAlerts();
+      });
       pollTeamAlerts();
-      setInterval(pollTeamAlerts, 6000);
     })();
   </script>`;
 }

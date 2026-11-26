@@ -36,7 +36,7 @@ const EGYPT_GOVERNORATES = [
   "قنا",
   "شمال سيناء"
 ];
-const TEACHER_MAIN_PHOTO = "/teacher-photo.svg";
+const TEACHER_MAIN_PHOTO = "/teacher-ahmed-portrait.jpeg";
 const DEFAULT_ADMIN_EMAIL = "mohmed@mr.com";
 const DEFAULT_ADMIN_PASS = "admin123456";
 const PLATFORM_NAME = "منصة الرياضيات";
@@ -229,7 +229,9 @@ async function getSettings(env) {
     admin_password: saved.admin_password || "",
     admin_password_hash: saved.admin_password_hash || (await sha256(env.ADMIN_PASSWORD || DEFAULT_ADMIN_PASS)),
     global_notice: saved.global_notice || "",
-    teacher_image: saved.teacher_image || TEACHER_MAIN_PHOTO,
+    teacher_image: saved.teacher_image && saved.teacher_image !== "/teacher-photo.svg"
+      ? saved.teacher_image
+      : TEACHER_MAIN_PHOTO,
     youtube_url: saved.youtube_url || "",
     tiktok_url: saved.tiktok_url || "",
     facebook_url: saved.facebook_url || ""
